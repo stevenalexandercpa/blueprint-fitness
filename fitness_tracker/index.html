@@ -63,7 +63,7 @@
 
   .auth-sub {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: var(--muted);
     text-transform: uppercase;
@@ -89,7 +89,7 @@
     padding: 10px;
     text-align: center;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: var(--muted);
     cursor: pointer;
@@ -108,7 +108,7 @@
 
   .form-label {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1.5px;
     color: var(--muted);
     text-transform: uppercase;
@@ -190,7 +190,7 @@
 
   .nav-signout {
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1px;
     color: var(--muted);
     background: none;
@@ -205,7 +205,7 @@
 
   .nav-day-type {
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1px;
     padding: 2px 8px;
   }
@@ -234,7 +234,7 @@
     background: none;
     color: var(--muted);
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     text-transform: uppercase;
     transition: color 0.2s;
@@ -300,7 +300,7 @@
     align-items: center;
     justify-content: center;
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 12px;
     color: var(--muted);
     flex-direction: column;
     gap: 1px;
@@ -339,7 +339,7 @@
   }
 
   .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
-  .ring-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 1px; }
+  .ring-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
   .ring-info { flex: 1; }
   .ring-info-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px; margin-bottom: 8px; }
   .ring-next { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
@@ -372,6 +372,7 @@
   .task-item.done-task { opacity: 0.55; }
   .task-item.missed-task { border-color: var(--red); opacity: 0.7; }
   .task-item.late-task { border-color: var(--orange); }
+  .task-item.early-task { border-color: var(--blue); opacity: 0.7; }
 
   .task-header { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
 
@@ -405,6 +406,7 @@
   .task-status.done { background: var(--accent); border-color: var(--accent); color: var(--bg); }
   .task-status.missed { background: var(--red-dim); border-color: var(--red); color: var(--red); }
   .task-status.late { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+  .task-status.early { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
   .task-status.active { border-color: var(--accent); color: var(--accent); animation: pulse-circle 2s infinite; }
 
   @keyframes pulse-circle {
@@ -418,19 +420,20 @@
   .window-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 2px 8px;
-    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 1px;
     margin-bottom: 8px;
   }
 
   .window-pill.open { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,60,0.3); }
   .window-pill.upcoming { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(60,168,240,0.3); }
   .window-pill.missed-pill { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,60,60,0.3); }
+  .window-pill.early-pill { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(60,168,240,0.3); }
 
   .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
   .countdown-bar { height: 4px; background: var(--border2); margin-bottom: 12px; overflow: hidden; }
   .countdown-fill { height: 100%; background: var(--accent); transition: width 1s linear; }
-  .countdown-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .countdown-text { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 
   .btn-complete {
     width: 100%; padding: 14px;
@@ -447,7 +450,7 @@
     width: 100%; padding: 10px;
     background: transparent; color: var(--orange);
     border: 1px solid var(--orange);
-    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 1px;
     cursor: pointer; margin-top: 8px; transition: all 0.2s;
   }
 
@@ -461,8 +464,8 @@
     display: flex; justify-content: space-between; align-items: center;
   }
 
-  .meal-card-type { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-  .meal-card-protein { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); }
+  .meal-card-type { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .meal-card-protein { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
   .meal-card-name { padding: 12px 16px; font-size: 16px; font-weight: 500; line-height: 1.4; }
   .meal-card-detail { padding: 0 16px 12px; font-size: 14px; color: var(--muted); line-height: 1.5; }
   .meal-card-recipe-btn {
@@ -472,7 +475,7 @@
     border: 1px solid var(--border2);
     color: var(--muted);
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     cursor: pointer;
     text-align: left;
@@ -502,7 +505,7 @@
     margin-bottom: 12px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   }
 
-  .two-day-subhead { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .two-day-subhead { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 1px; }
 
   .two-day-task {
     padding: 10px 12px; background: var(--card); border: 1px solid var(--border);
@@ -514,7 +517,7 @@
   .two-day-check {
     width: 20px; height: 20px; border-radius: 50%;
     border: 1.5px solid var(--border2); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
   }
 
   .two-day-check.done { background: var(--accent); border-color: var(--accent); color: var(--bg); }
@@ -522,7 +525,7 @@
   .two-day-check.late { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
 
   .two-day-task-name { font-size: 14px; font-weight: 500; line-height: 1.3; flex: 1; }
-  .two-day-time { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; }
+  .two-day-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); flex-shrink: 0; }
 
   /* ── WEEKLY VIEW ── */
   .week-grid {
@@ -533,7 +536,7 @@
   .week-day-col { text-align: center; }
 
   .week-day-label {
-    font-family: 'DM Mono', monospace; font-size: 9px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
     color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase;
   }
 
@@ -555,7 +558,7 @@
 
   .stat-box { background: var(--card); border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
   .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
-  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
 
   /* ── COUPLES VIEW ── */
   .couples-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -569,7 +572,7 @@
   .couple-name.bekky { color: var(--pink); }
 
   .couple-streak { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 1px; line-height: 1; }
-  .couple-streak-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .couple-streak-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
 
   .couple-pct { font-size: 13px; color: var(--muted); margin-top: 12px; }
   .couple-pct span { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; }
@@ -597,11 +600,11 @@
 
   .vs-streak { text-align: center; }
   .vs-streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 1px; line-height: 1; }
-  .vs-streak-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+  .vs-streak-name { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
 
   /* ── METRICS ── */
   .metrics-card { margin: 0 16px 12px; background: var(--card); border: 1px solid var(--border); padding: 20px; }
-  .metrics-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+  .metrics-title { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
 
   .metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 
@@ -625,7 +628,7 @@
   }
 
   .metrics-entry:last-child { border-bottom: none; }
-  .metrics-entry-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .metrics-entry-date { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); }
   .metrics-entry-vals { display: flex; gap: 16px; }
   .metrics-entry-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
 
@@ -1038,9 +1041,9 @@ function showToast(msg,type='') {
 }
 
 function getDayTypeLabel(dt) {
-  if(dt==='ride') return `<span style="color:var(--accent);background:var(--accent-dim);border:1px solid rgba(200,240,60,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">RIDE</span>`;
-  if(dt==='lift') return `<span style="color:var(--blue);background:var(--blue-dim);border:1px solid rgba(60,168,240,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">LIFT</span>`;
-  return `<span style="color:var(--muted);background:var(--muted2);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">REST</span>`;
+  if(dt==='ride') return `<span style="color:var(--accent);background:var(--accent-dim);border:1px solid rgba(200,240,60,0.3);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">RIDE</span>`;
+  if(dt==='lift') return `<span style="color:var(--blue);background:var(--blue-dim);border:1px solid rgba(60,168,240,0.3);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">LIFT</span>`;
+  return `<span style="color:var(--muted);background:var(--muted2);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">REST</span>`;
 }
 
 function taskStatus(taskId, dateKey) {
@@ -1052,7 +1055,7 @@ function getDayCompletion(dateKey, completions) {
   const dt = DAY_TYPES[d.getDay()]||'rest';
   const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
   const comp = completions[dateKey]||{};
-  const done = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late').length;
+  const done = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early').length;
   const missed = tasks.filter(t=>comp[t.id]==='missed').length;
   return { done, missed, total:tasks.length };
 }
@@ -1229,7 +1232,7 @@ function calcStreak(completions) {
     const dt = DAY_TYPES[d.getDay()];
     const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp = completions[key]||{};
-    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late');
+    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early');
     if (!allDone) break;
     streak++;
     d.setDate(d.getDate()-1);
@@ -1238,7 +1241,7 @@ function calcStreak(completions) {
   const todayComp = completions[todayKey()]||{};
   const todayDt = dayType();
   const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
-  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late');
+  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late'||todayComp[t.id]==='early');
   if (todayAllDone) streak++;
   return streak;
 }
@@ -1287,12 +1290,12 @@ function renderDaily() {
     const dot=document.createElement('div');
     dot.className='streak-dot '+cls;
     const checkmark = allDone ? '✓' : '';
-    dot.innerHTML=`<span style="font-size:8px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${checkmark?'<span style="font-size:11px;font-weight:bold">'+checkmark+'</span>':'<span style="font-size:9px">'+d.getDate()+'</span>'}`;
+    dot.innerHTML=`<span style="font-size:11px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${checkmark?'<span style="font-size:13px;font-weight:bold">'+checkmark+'</span>':'<span style="font-size:12px">'+d.getDate()+'</span>'}`;
     dotsEl.appendChild(dot);
   }
 
   // Progress ring
-  const doneCount = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late').length;
+  const doneCount = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early').length;
   const pct = Math.round((doneCount/tasks.length)*100);
   const offset = 263.9 - (pct/100)*263.9;
   document.getElementById('ringFill').style.strokeDashoffset = offset;
@@ -1323,6 +1326,7 @@ function renderDaily() {
     if(status==='done'){statusIcon='✓';statusCls='done';}
     else if(status==='missed'){statusIcon='✗';statusCls='missed';}
     else if(status==='late'){statusIcon='✓';statusCls='late';}
+    else if(status==='early'){statusIcon='✓';statusCls='early';}
     else if(isActive){statusIcon='●';statusCls='active';}
 
     let pillHtml='';
@@ -1334,22 +1338,26 @@ function renderDaily() {
       pillHtml=`<div class="window-pill missed-pill"><div class="dot"></div>MISSED — MARK LATE BELOW</div>`;
     } else if(status==='late'){
       pillHtml=`<div class="window-pill" style="background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,132,60,0.3)"><div class="dot"></div>COMPLETED LATE ✓</div>`;
+    } else if(status==='early'){
+      pillHtml=`<div class="window-pill early-pill"><div class="dot"></div>COMPLETED EARLY ✓</div>`;
     } else if(status==='done'){
       pillHtml=`<div class="window-pill open"><div class="dot"></div>COMPLETE ✓</div>`;
     }
 
     let actionHtml='';
-    if(status==='pending'&&ws==='open'){
+    if(status==='pending'&&ws==='upcoming'){
+      actionHtml=`<button class="btn-late" style="color:var(--blue);border-color:var(--blue);" onclick="completeTask('${task.id}','${dk}','upcoming')">MARK AS COMPLETED EARLY</button>`;
+    } else if(status==='pending'&&ws==='open'){
       const closeTime=task.time+task.window;
       const minsLeft=closeTime-nowMins();
       const pctLeft=(minsLeft/task.window)*100;
       actionHtml=`
         <div class="countdown-bar"><div class="countdown-fill" style="width:${Math.max(0,pctLeft)}%"></div></div>
         <div class="countdown-text">Window closes in ${Math.max(0,minsLeft)} min · ${fmtTime(closeTime)}</div>
-        <button class="btn-complete" onclick="completeTask('${task.id}','${dk}',false)">✓ MARK COMPLETE</button>
+        <button class="btn-complete" onclick="completeTask('${task.id}','${dk}','open')">✓ MARK COMPLETE</button>
       `;
     } else if((status==='pending'&&ws==='expired')||status==='missed'){
-      actionHtml=`<button class="btn-late" onclick="completeTask('${task.id}','${dk}',true)">MARK AS LATE COMPLETION</button>`;
+      actionHtml=`<button class="btn-late" onclick="completeTask('${task.id}','${dk}','expired')">MARK AS LATE COMPLETION</button>`;
     } else if(status==='done'||status==='late'){
       actionHtml=`<button class="btn-late" onclick="undoTask('${task.id}','${dk}')" style="color:var(--muted);border-color:var(--border2)">UNDO</button>`;
     }
@@ -1386,19 +1394,22 @@ function toggleTask(taskId) {
 
 async function quickComplete(taskId, dateKey) {
   const status=taskStatus(taskId,dateKey);
-  if(status==='done'||status==='late') {
+  if(status==='done'||status==='late'||status==='early') {
     await undoTask(taskId,dateKey);
   } else {
     const task=(TASK_TEMPLATES[dayType()]||TASK_TEMPLATES.rest).find(t=>t.id===taskId);
     const ws=task?getWindowStatus(task):'expired';
-    await completeTask(taskId,dateKey,ws!=='open');
+    await completeTask(taskId,dateKey,ws);
   }
 }
 
-async function completeTask(taskId, dateKey, isLate) {
-  const ok=await saveCompletion(taskId,isLate?'late':'done',dateKey);
+async function completeTask(taskId, dateKey, ws) {
+  const statusToSave = ws==='upcoming' ? 'early' : ws==='expired' ? 'late' : 'done';
+  const ok=await saveCompletion(taskId,statusToSave,dateKey);
   if(!ok) return;
-  showToast(isLate?'✓ Marked late — still counts!':'✓ Task complete!',isLate?'orange':'');
+  const msg = statusToSave==='early' ? '✓ Completed early!' : statusToSave==='late' ? '✓ Marked late — still counts!' : '✓ Task complete!';
+  const col = statusToSave==='early' ? 'blue' : statusToSave==='late' ? 'orange' : '';
+  showToast(msg, col);
   renderDaily();
 }
 
@@ -1420,8 +1431,8 @@ function renderMeals(containerId, dayOffset) {
   order.forEach(key=>{
     const m=meals[key]; if(!m) return;
     let extra='';
-    if(m.batch) extra=`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
-    if(m.leftover) extra=`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green);margin-top:4px;">♻ Leftovers — no cooking needed</div>`;
+    if(m.batch) extra=`<div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
+    if(m.leftover) extra=`<div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green);margin-top:4px;">♻ Leftovers — no cooking needed</div>`;
     const card=document.createElement('div');
     card.className='meal-card';
     const cardId='meal-'+containerId+'-'+key;
@@ -1475,9 +1486,10 @@ function render2Day() {
       let checkCls='',checkIcon='';
       if(status==='done'){checkCls='done';checkIcon='✓';}
       else if(status==='late'){checkCls='late';checkIcon='✓';}
+      else if(status==='early'){checkCls='done';checkIcon='✓';}
       else if(status==='missed'){checkCls='missed';checkIcon='✗';}
       const taskEl=document.createElement('div');
-      taskEl.className='two-day-task'+(status==='done'||status==='late'?' done-t':'');
+      taskEl.className='two-day-task'+(status==='done'||status==='late'||status==='early'?' done-t':'');
       if(offset===0){ taskEl.onclick=()=>{quickComplete(task.id,dk).then(()=>render2Day());}; taskEl.style.cursor='pointer'; }
       taskEl.innerHTML=`<div class="two-day-check ${checkCls}">${checkIcon}</div><div class="two-day-task-name">${task.icon} ${task.name}</div><div class="two-day-time">${fmtTime(task.time)}</div>`;
       col.appendChild(taskEl);
@@ -1527,7 +1539,7 @@ function renderWeekly() {
       <div class="week-day-label">${days[d.getDay()]}</div>
       <div class="week-day-num ${numCls}">${d.getDate()}</div>
       <div class="week-type-dot" style="background:${dotColor}"></div>
-      ${!isFuture?`<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;">${done}/${total}</div>`:''}
+      ${!isFuture?`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${done}/${total}</div>`:''}
     `;
     weekGrid.appendChild(col);
   }
@@ -1552,19 +1564,19 @@ function renderWeekly() {
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <div>
           <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:${isToday?'var(--accent)':'var(--text)'}">${days[d.getDay()]} ${d.getDate()}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:9px;color:${dtColor};margin-left:8px;letter-spacing:1px;">${dt.toUpperCase()}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${dtColor};margin-left:8px;letter-spacing:1px;">${dt.toUpperCase()}</span>
         </div>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${done}/${total} ▾</span>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${done}/${total} ▾</span>
       </div>
       <div style="display:${isToday?'block':'none'}">
         ${tasks.map(t=>{
           const s=comp[t.id]||'pending';
-          const ic=s==='done'||s==='late'?'✓':s==='missed'?'✗':'○';
-          const c=s==='done'?'var(--accent)':s==='late'?'var(--orange)':s==='missed'?'var(--red)':'var(--muted2)';
+          const ic=s==='done'||s==='late'||s==='early'?'✓':s==='missed'?'✗':'○';
+          const c=s==='done'?'var(--accent)':s==='early'?'var(--blue)':s==='late'?'var(--orange)':s==='missed'?'var(--red)':'var(--muted2)';
           return `<div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
             <span style="color:${c};font-size:12px;width:14px">${ic}</span>
             <span style="font-size:12px;">${t.icon} ${t.name}</span>
-            <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${fmtTime(t.time)}</span>
+            <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${fmtTime(t.time)}</span>
           </div>`;
         }).join('')}
       </div>
@@ -1605,8 +1617,8 @@ async function renderTogether() {
   document.getElementById('coupleGoalPartner').textContent = partnerName === 'Steve' ? 'FTP → 250W · 165 lbs' : 'Health · Longevity · Vitality';
 
   // Today pct — my data
-  const myDone = tasks.filter(t=>(myComp[dk]||{})[t.id]==='done'||(myComp[dk]||{})[t.id]==='late').length;
-  const theirDone = tasks.filter(t=>(theirComp[dk]||{})[t.id]==='done'||(theirComp[dk]||{})[t.id]==='late').length;
+  const myDone = tasks.filter(t=>(myComp[dk]||{})[t.id]==='done'||(myComp[dk]||{})[t.id]==='late'||(myComp[dk]||{})[t.id]==='early').length;
+  const theirDone = tasks.filter(t=>(theirComp[dk]||{})[t.id]==='done'||(theirComp[dk]||{})[t.id]==='late'||(theirComp[dk]||{})[t.id]==='early').length;
   const myPct = Math.round((myDone/tasks.length)*100);
   const theirPct = Math.round((theirDone/tasks.length)*100);
 
@@ -1659,9 +1671,9 @@ function showPartnerLinked(name) {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--green-dim);border:1px solid rgba(60,240,160,0.3);">
       <div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--green)">${name.toUpperCase()}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">LINKED ✓</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:1px;">LINKED ✓</div>
       </div>
-      <button onclick="unlinkPartner()" style="background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">UNLINK</button>
+      <button onclick="unlinkPartner()" style="background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">UNLINK</button>
     </div>
   `;
 }
@@ -1733,7 +1745,7 @@ async function unlinkPartner() {
       <input class="form-input" type="email" id="partnerEmail" placeholder="partner@email.com">
     </div>
     <button class="btn-log" onclick="linkPartner()" style="margin-top:4px;">LINK PARTNER</button>
-    <div id="partnerLinkError" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;"></div>
+    <div id="partnerLinkError" style="color:var(--red);font-family:'DM Mono',monospace;font-size:13px;margin-top:10px;"></div>
   `;
   showToast('Partner unlinked', 'orange');
 }
@@ -1817,9 +1829,9 @@ async function loadMetricsHistory() {
     <div class="metrics-entry">
       <div class="metrics-entry-date">${row.date}</div>
       <div class="metrics-entry-vals">
-        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--accent)">${row.weight_lbs}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
-        ${row.ftp_watts?`<div><div class="metrics-entry-val" style="color:var(--green)">${row.ftp_watts}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">WATTS</div></div>`:''}
-        ${row.body_fat_pct?`<div><div class="metrics-entry-val" style="color:var(--blue)">${row.body_fat_pct}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">BF%</div></div>`:''}
+        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--accent)">${row.weight_lbs}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
+        ${row.ftp_watts?`<div><div class="metrics-entry-val" style="color:var(--green)">${row.ftp_watts}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">WATTS</div></div>`:''}
+        ${row.body_fat_pct?`<div><div class="metrics-entry-val" style="color:var(--blue)">${row.body_fat_pct}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">BF%</div></div>`:''}
       </div>
     </div>
   `).join('');
