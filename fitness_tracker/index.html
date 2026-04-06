@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Steve's Blueprint Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Blueprint — Fitness Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #080a0d;
@@ -23,12 +24,14 @@
     --orange-dim: rgba(240,132,60,0.12);
     --red: #f03c3c;
     --red-dim: rgba(240,60,60,0.12);
+    --pink: #f03ca8;
+    --pink-dim: rgba(240,60,168,0.12);
     --text: #dde2ec;
     --muted: #5a6478;
     --muted2: #3a4256;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
   body {
     background: var(--bg);
@@ -39,12 +42,127 @@
     overflow-x: hidden;
   }
 
-  /* NAV */
+  /* ── AUTH SCREEN ── */
+  .auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+  }
+
+  .auth-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .auth-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .auth-error {
+    color: var(--red);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  /* ── APP SHELL ── */
+  .app { display: none; }
+
   .nav {
     position: fixed;
     top: 0; left: 0; right: 0;
     z-index: 100;
-    background: rgba(8,10,13,0.95);
+    background: rgba(8,10,13,0.97);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0 16px;
@@ -61,24 +179,37 @@
     color: var(--accent);
   }
 
-  .nav-date {
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+
+  .nav-user {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
     letter-spacing: 1px;
     color: var(--muted);
-    text-align: right;
   }
+
+  .nav-signout {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-signout:hover { border-color: var(--red); color: var(--red); }
 
   .nav-day-type {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 1px;
     padding: 2px 8px;
-    margin-top: 2px;
-    display: inline-block;
   }
 
-  /* TAB BAR */
   .tabbar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -99,7 +230,6 @@
     justify-content: center;
     gap: 3px;
     cursor: pointer;
-    transition: all 0.2s;
     border: none;
     background: none;
     color: var(--muted);
@@ -107,12 +237,12 @@
     font-size: 9px;
     letter-spacing: 1px;
     text-transform: uppercase;
+    transition: color 0.2s;
   }
 
   .tab.active { color: var(--accent); }
   .tab-icon { font-size: 18px; line-height: 1; }
 
-  /* MAIN CONTENT */
   .main {
     padding-top: 56px;
     padding-bottom: 80px;
@@ -122,7 +252,7 @@
   .view { display: none; }
   .view.active { display: block; }
 
-  /* STREAK BANNER */
+  /* ── COMPONENTS ── */
   .streak-banner {
     margin: 16px;
     padding: 16px 20px;
@@ -160,15 +290,10 @@
     margin-top: 2px;
   }
 
-  .streak-dots {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
+  .streak-dots { display: flex; gap: 6px; align-items: center; }
 
   .streak-dot {
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     border: 1px solid var(--border2);
     display: flex;
@@ -177,8 +302,6 @@
     font-family: 'DM Mono', monospace;
     font-size: 8px;
     color: var(--muted);
-    flex-direction: column;
-    gap: 1px;
   }
 
   .streak-dot.done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
@@ -186,11 +309,10 @@
   .streak-dot.today { border-color: var(--accent); animation: pulse-border 2s infinite; }
 
   @keyframes pulse-border {
-    0%,100% { border-color: var(--accent); box-shadow: 0 0 0 0 var(--accent-glow); }
-    50% { border-color: var(--accent); box-shadow: 0 0 0 4px transparent; }
+    0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { box-shadow: 0 0 0 4px transparent; }
   }
 
-  /* PROGRESS RING */
   .progress-ring-wrap {
     margin: 0 16px 16px;
     padding: 24px;
@@ -201,65 +323,25 @@
     gap: 24px;
   }
 
-  .ring-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    flex-shrink: 0;
-  }
-
+  .ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
   .ring-svg { transform: rotate(-90deg); }
-
   .ring-bg { fill: none; stroke: var(--border2); stroke-width: 6; }
   .ring-fill { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
 
   .ring-center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
   }
 
-  .ring-pct {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 1px;
-    color: var(--accent);
-    line-height: 1;
-  }
-
-  .ring-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 8px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
+  .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
+  .ring-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 1px; }
   .ring-info { flex: 1; }
+  .ring-info-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; margin-bottom: 8px; }
+  .ring-next { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .ring-next-task { font-size: 14px; font-weight: 500; color: var(--text); }
 
-  .ring-info-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-
-  .ring-next {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-
-  .ring-next-task {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  /* TASK LIST */
-  .task-section-label {
+  .section-label {
     padding: 16px 16px 8px;
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -274,44 +356,27 @@
     border: 1px solid var(--border);
     overflow: hidden;
     transition: all 0.3s;
-    position: relative;
+    animation: fadeUp 0.3s ease both;
   }
 
-  .task-item.active-task {
-    border-color: var(--accent);
-    box-shadow: 0 0 20px var(--accent-glow);
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to { opacity:1; transform:translateY(0); }
   }
 
-  .task-item.done-task { opacity: 0.6; }
+  .task-item.active-task { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+  .task-item.done-task { opacity: 0.55; }
   .task-item.missed-task { border-color: var(--red); opacity: 0.7; }
   .task-item.late-task { border-color: var(--orange); }
 
-  .task-header {
-    display: flex;
-    align-items: center;
-    padding: 14px 16px;
-    gap: 12px;
-    cursor: pointer;
-  }
+  .task-header { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
 
-  .task-time {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    width: 44px;
-    flex-shrink: 0;
-  }
+  .task-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 44px; flex-shrink: 0; }
 
   .task-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-    background: var(--border2);
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; background: var(--border2);
   }
 
   .task-icon.eat { background: var(--green-dim); }
@@ -322,33 +387,15 @@
   .task-icon.work { background: var(--muted2); }
 
   .task-body { flex: 1; }
-
-  .task-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-  }
-
-  .task-desc {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-    line-height: 1.4;
-  }
+  .task-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .task-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 
   .task-status {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     border: 2px solid var(--border2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 14px;
-    transition: all 0.2s;
-    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px;
+    transition: all 0.2s; cursor: pointer;
   }
 
   .task-status.done { background: var(--accent); border-color: var(--accent); color: var(--bg); }
@@ -361,876 +408,925 @@
     50% { box-shadow: 0 0 0 6px transparent; }
   }
 
-  /* ACTIVE TASK EXPANDED */
-  .task-action {
-    padding: 0 16px 16px;
-    display: none;
-  }
-
+  .task-action { padding: 0 16px 16px; display: none; }
   .task-item.active-task .task-action { display: block; }
 
-  .countdown-bar {
-    height: 4px;
-    background: var(--border2);
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-
-  .countdown-fill {
-    height: 100%;
-    background: var(--accent);
-    transition: width 1s linear;
-  }
-
-  .countdown-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-
-  .btn-complete {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .btn-complete:active { transform: scale(0.98); background: #a8cc2a; }
-
-  .btn-late {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    color: var(--orange);
-    border: 1px solid var(--orange);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: all 0.2s;
-  }
-
-  .btn-late:active { background: var(--orange-dim); }
-
-  /* WINDOW INDICATOR */
   .window-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    display: inline-flex; align-items: center; gap: 4px;
     padding: 2px 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 1px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
     margin-bottom: 8px;
   }
 
   .window-pill.open { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,60,0.3); }
   .window-pill.upcoming { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(60,168,240,0.3); }
-  .window-pill.missed { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,60,60,0.3); }
+  .window-pill.missed-pill { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,60,60,0.3); }
 
   .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-  /* MEAL CARD */
-  .meal-card {
-    margin: 0 16px 8px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    overflow: hidden;
+  .countdown-bar { height: 4px; background: var(--border2); margin-bottom: 12px; overflow: hidden; }
+  .countdown-fill { height: 100%; background: var(--accent); transition: width 1s linear; }
+  .countdown-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+
+  .btn-complete {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: var(--bg);
+    border: none; font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
   }
+
+  .btn-complete:active { transform: scale(0.98); }
+
+  .btn-late {
+    width: 100%; padding: 10px;
+    background: transparent; color: var(--orange);
+    border: 1px solid var(--orange);
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    cursor: pointer; margin-top: 8px; transition: all 0.2s;
+  }
+
+  .btn-late:active { background: var(--orange-dim); }
+
+  /* ── MEAL CARDS ── */
+  .meal-card { margin: 0 16px 8px; background: var(--card); border: 1px solid var(--border); overflow: hidden; }
 
   .meal-card-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
   }
 
-  .meal-card-type {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
+  .meal-card-type { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .meal-card-protein { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); }
+  .meal-card-name { padding: 12px 16px; font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .meal-card-detail { padding: 0 16px 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
 
-  .meal-card-protein {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--accent);
-  }
-
-  .meal-card-name {
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.4;
-  }
-
-  .meal-card-detail {
-    padding: 0 16px 12px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  /* WEEKLY VIEW */
-  .week-grid {
-    margin: 16px;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
-
-  .week-day-col { text-align: center; }
-
-  .week-day-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-
-  .week-day-num {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 4px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .week-day-num.today { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-  .week-day-num.done { border-color: var(--green); background: var(--green-dim); color: var(--green); }
-  .week-day-num.partial { border-color: var(--orange); background: var(--orange-dim); color: var(--orange); }
-  .week-day-num.rest { border-color: var(--muted2); color: var(--muted); }
-
-  .week-type-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    margin: 0 auto;
-  }
-
-  /* 2-DAY VIEW */
-  .two-day-grid {
-    margin: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .two-day-col {}
+  /* ── 2-DAY VIEW ── */
+  .two-day-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .two-day-header {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px;
+    margin-bottom: 12px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   }
 
-  .two-day-subhead {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
+  .two-day-subhead { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
 
   .two-day-task {
-    padding: 10px 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    padding: 10px 12px; background: var(--card); border: 1px solid var(--border);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
   }
 
-  .two-day-task.done { opacity: 0.5; border-color: transparent; }
+  .two-day-task.done-t { opacity: 0.5; border-color: transparent; }
 
   .two-day-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 1.5px solid var(--border2);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--border2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
   }
 
   .two-day-check.done { background: var(--accent); border-color: var(--accent); color: var(--bg); }
   .two-day-check.missed { background: var(--red-dim); border-color: var(--red); color: var(--red); }
   .two-day-check.late { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
 
-  .two-day-task-name {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.3;
-    flex: 1;
-  }
+  .two-day-task-name { font-size: 12px; font-weight: 500; line-height: 1.3; flex: 1; }
+  .two-day-time { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; }
 
-  .two-day-time {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-
-  /* STATS */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+  /* ── WEEKLY VIEW ── */
+  .week-grid {
     margin: 16px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
   }
 
-  .stat-box {
+  .week-day-col { text-align: center; }
+
+  .week-day-label {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase;
+  }
+
+  .week-day-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 4px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; transition: all 0.2s;
+  }
+
+  .week-day-num.today { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .week-day-num.done-w { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+  .week-day-num.partial-w { border-color: var(--orange); background: var(--orange-dim); color: var(--orange); }
+
+  .week-type-dot { width: 6px; height: 6px; border-radius: 50%; margin: 0 auto; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px; }
+
+  .stat-box { background: var(--card); border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+  /* ── COUPLES VIEW ── */
+  .couples-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .couple-card { background: var(--card); border: 1px solid var(--border); padding: 20px; text-align: center; }
+  .couple-card.steve { border-top: 3px solid var(--accent); }
+  .couple-card.bekky { border-top: 3px solid var(--pink); }
+
+  .couple-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; margin-bottom: 4px; }
+  .couple-name.steve { color: var(--accent); }
+  .couple-name.bekky { color: var(--pink); }
+
+  .couple-streak { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 1px; line-height: 1; }
+  .couple-streak-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .couple-pct { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .couple-pct span { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; }
+
+  .couple-ring { position: relative; width: 80px; height: 80px; margin: 12px auto; }
+  .couple-ring svg { transform: rotate(-90deg); }
+
+  .vs-banner {
+    margin: 0 16px 16px;
+    padding: 16px;
     background: var(--card);
     border: 1px solid var(--border);
-    padding: 14px 12px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
   }
 
-  .stat-val {
+  .vs-text {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 32px;
-    letter-spacing: 1px;
-    line-height: 1;
+    letter-spacing: 4px;
+    color: var(--muted2);
   }
 
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 4px;
+  .vs-streak { text-align: center; }
+  .vs-streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 1px; line-height: 1; }
+  .vs-streak-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+
+  /* ── METRICS ── */
+  .metrics-card { margin: 0 16px 12px; background: var(--card); border: 1px solid var(--border); padding: 20px; }
+  .metrics-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+
+  .metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  .metric-input-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .btn-log {
+    width: 100%; padding: 12px;
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--accent);
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
   }
 
-  /* TOAST */
+  .btn-log:active { background: var(--accent-dim); }
+
+  .metrics-history { margin-top: 16px; }
+  .metrics-entry {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .metrics-entry:last-child { border-bottom: none; }
+  .metrics-entry-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .metrics-entry-vals { display: flex; gap: 16px; }
+  .metrics-entry-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+
+  /* ── TOAST ── */
   .toast {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
+    position: fixed; bottom: 80px; left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: var(--bg);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 1px;
-    padding: 10px 20px;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 200;
-    white-space: nowrap;
+    background: var(--accent); color: var(--bg);
+    font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 1px;
+    padding: 10px 20px; opacity: 0; transition: all 0.3s;
+    z-index: 200; white-space: nowrap;
   }
 
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.orange { background: var(--orange); color: #fff; }
+  .toast.red { background: var(--red); color: #fff; }
 
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(12px); }
-    to { opacity:1; transform: translateY(0); }
+  /* ── LOADING ── */
+  .loading {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 300;
   }
 
-  .task-item { animation: fadeUp 0.3s ease both; }
+  .loading-logo { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: var(--accent); margin-bottom: 20px; }
 
-  .complete-flash {
-    animation: flash 0.4s ease;
+  .loading-bar { width: 120px; height: 2px; background: var(--border2); overflow: hidden; }
+  .loading-fill { height: 100%; background: var(--accent); animation: loadfill 1.5s ease infinite; }
+
+  @keyframes loadfill {
+    0% { width: 0; margin-left: 0; }
+    50% { width: 100%; margin-left: 0; }
+    100% { width: 0; margin-left: 100%; }
   }
 
-  @keyframes flash {
-    0% { background: var(--accent-dim); }
-    50% { background: rgba(200,240,60,0.3); }
-    100% { background: var(--card); }
-  }
-
-  /* SCROLLBAR */
   ::-webkit-scrollbar { width: 0; }
-
-  .section-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 8px 16px 16px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  .empty-state .big { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--border2); letter-spacing: 2px; }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<div class="nav">
-  <div class="nav-logo">BLUEPRINT</div>
-  <div class="nav-date" id="navDate">
-    <div id="navDateText"></div>
-    <div id="navDayType" class="nav-day-type"></div>
+<!-- LOADING -->
+<div class="loading" id="loading">
+  <div class="loading-logo">BLUEPRINT</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+</div>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen" style="display:none">
+  <div class="auth-logo">BLUEPRINT</div>
+  <div class="auth-sub">Fitness · Nutrition · Recovery</div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')" id="loginTab">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')" id="signupTab">Create Account</button>
+    </div>
+
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">SIGN IN</button>
+    </div>
+
+    <div id="signupForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input class="form-input" type="text" id="signupName" placeholder="Steve or Bekky">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="signupEmail" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="signupPassword" placeholder="Min 6 characters">
+      </div>
+      <button class="btn-primary" onclick="handleSignup()">CREATE ACCOUNT</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
   </div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MAIN -->
-<div class="main">
+<!-- APP -->
+<div class="app" id="app">
 
-  <!-- ============ DAILY VIEW ============ -->
-  <div class="view active" id="view-daily">
-
-    <div class="streak-banner">
+  <div class="nav">
+    <div class="nav-logo">BLUEPRINT</div>
+    <div class="nav-right">
       <div>
-        <div class="streak-num" id="streakNum">0</div>
-        <div class="streak-label">Day Streak</div>
+        <div class="nav-user" id="navUser"></div>
+        <div id="navDayType" class="nav-day-type"></div>
       </div>
-      <div class="streak-dots" id="streakDots"></div>
+      <button class="nav-signout" onclick="handleSignout()">OUT</button>
     </div>
+  </div>
 
-    <div class="progress-ring-wrap">
-      <div class="ring-container">
-        <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
-          <circle class="ring-bg" cx="50" cy="50" r="42"/>
-          <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
-        </svg>
-        <div class="ring-center">
-          <div class="ring-pct" id="ringPct">0%</div>
-          <div class="ring-sub">TODAY</div>
+  <div class="main">
+
+    <!-- TODAY -->
+    <div class="view active" id="view-daily">
+      <div class="streak-banner">
+        <div>
+          <div class="streak-num" id="streakNum">0</div>
+          <div class="streak-label">Day Streak</div>
+        </div>
+        <div class="streak-dots" id="streakDots"></div>
+      </div>
+
+      <div class="progress-ring-wrap">
+        <div class="ring-container">
+          <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="ringPct">0%</div>
+            <div class="ring-sub">TODAY</div>
+          </div>
+        </div>
+        <div class="ring-info">
+          <div class="ring-info-title" id="ringTitle">Loading...</div>
+          <div class="ring-next" id="ringNextLabel">Next task:</div>
+          <div class="ring-next-task" id="ringNextTask">—</div>
         </div>
       </div>
-      <div class="ring-info">
-        <div class="ring-info-title" id="ringTitle">Today's Plan</div>
-        <div class="ring-next" id="ringNextLabel">Next task:</div>
-        <div class="ring-next-task" id="ringNextTask">Loading...</div>
+
+      <div class="section-label">SCHEDULE</div>
+      <div id="taskList"></div>
+
+      <div class="section-label" style="margin-top:8px;">TODAY'S MEALS</div>
+      <div id="mealList"></div>
+    </div>
+
+    <!-- 2-DAY -->
+    <div class="view" id="view-2day">
+      <div class="two-day-grid" id="twoDayGrid"></div>
+      <div class="section-label">MEALS — TODAY & TOMORROW</div>
+      <div id="twoDayMeals"></div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div class="view" id="view-weekly">
+      <div class="week-grid" id="weekGrid"></div>
+      <div style="height:1px;background:var(--border);margin:8px 16px 16px;"></div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-val" id="statStreak" style="color:var(--accent)">0</div><div class="stat-label">Streak</div></div>
+        <div class="stat-box"><div class="stat-val" id="statDone" style="color:var(--green)">0</div><div class="stat-label">Done</div></div>
+        <div class="stat-box"><div class="stat-val" id="statMissed" style="color:var(--red)">0</div><div class="stat-label">Missed</div></div>
+      </div>
+      <div class="section-label">THIS WEEK</div>
+      <div id="weeklyOverview"></div>
+    </div>
+
+    <!-- TOGETHER -->
+    <div class="view" id="view-together">
+      <div class="section-label" style="padding-top:20px;">COUPLE STREAKS</div>
+
+      <div class="vs-banner">
+        <div class="vs-streak">
+          <div class="vs-streak-num" id="vsStreakSteve" style="color:var(--accent)">—</div>
+          <div class="vs-streak-name">Steve</div>
+        </div>
+        <div class="vs-text">VS</div>
+        <div class="vs-streak">
+          <div class="vs-streak-num" id="vsStreakBekky" style="color:var(--pink)">—</div>
+          <div class="vs-streak-name">Bekky</div>
+        </div>
+      </div>
+
+      <div class="couples-grid">
+        <div class="couple-card steve">
+          <div class="couple-name steve">STEVE</div>
+          <div class="couple-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border2)" stroke-width="5"/>
+              <circle id="coupleRingSteve" cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" style="transition:stroke-dashoffset 0.8s"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)" id="couplePctSteve">0%</div>
+          </div>
+          <div class="couple-pct">Today: <span id="coupleTasksSteve" style="color:var(--accent)">—</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;" id="coupleGoalSteve">FTP → 250W · 165 lbs</div>
+        </div>
+
+        <div class="couple-card bekky">
+          <div class="couple-name bekky">BEKKY</div>
+          <div class="couple-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border2)" stroke-width="5"/>
+              <circle id="coupleRingBekky" cx="40" cy="40" r="34" fill="none" stroke="var(--pink)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" style="transition:stroke-dashoffset 0.8s"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--pink)" id="couplePctBekky">0%</div>
+          </div>
+          <div class="couple-pct">Today: <span id="coupleTasksBekky" style="color:var(--pink)">—</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;">Health · Longevity · Vitality</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:8px;">LOG METRICS</div>
+      <div class="metrics-card">
+        <div class="metrics-title">// Track Your Numbers</div>
+        <div class="metrics-row">
+          <div class="metric-input-group">
+            <label class="form-label">Weight (lbs)</label>
+            <input class="form-input" type="number" id="metricWeight" placeholder="185">
+          </div>
+          <div class="metric-input-group">
+            <label class="form-label">FTP (watts)</label>
+            <input class="form-input" type="number" id="metricFTP" placeholder="189">
+          </div>
+        </div>
+        <div class="metrics-row">
+          <div class="metric-input-group">
+            <label class="form-label">Body Fat %</label>
+            <input class="form-input" type="number" id="metricBF" placeholder="25.2" step="0.1">
+          </div>
+          <div class="metric-input-group">
+            <label class="form-label">Notes</label>
+            <input class="form-input" type="text" id="metricNotes" placeholder="Optional">
+          </div>
+        </div>
+        <button class="btn-log" onclick="logMetrics()">LOG METRICS</button>
+      </div>
+
+      <div class="section-label">METRIC HISTORY</div>
+      <div class="metrics-card">
+        <div id="metricsHistory"><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px;">No entries yet</div></div>
       </div>
     </div>
 
-    <div class="task-section-label">SCHEDULE</div>
-    <div id="taskList"></div>
-
-    <div class="task-section-label" style="margin-top:8px;">TODAY'S MEALS</div>
-    <div id="mealList"></div>
-
   </div>
 
-  <!-- ============ 2-DAY VIEW ============ -->
-  <div class="view" id="view-2day">
-    <div class="two-day-grid" id="twoDayGrid"></div>
-    <div class="task-section-label">MEALS — TODAY & TOMORROW</div>
-    <div id="twoDayMeals"></div>
+  <div class="tabbar">
+    <button class="tab active" onclick="switchTab('daily')" id="tab-daily">
+      <span class="tab-icon">◉</span><span>Today</span>
+    </button>
+    <button class="tab" onclick="switchTab('2day')" id="tab-2day">
+      <span class="tab-icon">⊞</span><span>2-Day</span>
+    </button>
+    <button class="tab" onclick="switchTab('weekly')" id="tab-weekly">
+      <span class="tab-icon">⊟</span><span>Week</span>
+    </button>
+    <button class="tab" onclick="switchTab('together')" id="tab-together">
+      <span class="tab-icon">♡</span><span>Together</span>
+    </button>
   </div>
 
-  <!-- ============ WEEKLY VIEW ============ -->
-  <div class="view" id="view-weekly">
-
-    <div class="week-grid" id="weekGrid"></div>
-    <div class="section-divider"></div>
-
-    <div class="stats-row">
-      <div class="stat-box">
-        <div class="stat-val accent" id="statStreak" style="color:var(--accent)">0</div>
-        <div class="stat-label">Streak</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="statCompleted" style="color:var(--green)">0</div>
-        <div class="stat-label">Completed</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="statMissed" style="color:var(--red)">0</div>
-        <div class="stat-label">Missed</div>
-      </div>
-    </div>
-
-    <div class="task-section-label">THIS WEEK'S OVERVIEW</div>
-    <div id="weeklyOverview"></div>
-  </div>
-
-</div>
-
-<!-- TAB BAR -->
-<div class="tabbar">
-  <button class="tab active" onclick="switchTab('daily')" id="tab-daily">
-    <span class="tab-icon">◉</span>
-    <span>Today</span>
-  </button>
-  <button class="tab" onclick="switchTab('2day')" id="tab-2day">
-    <span class="tab-icon">⊞</span>
-    <span>2-Day</span>
-  </button>
-  <button class="tab" onclick="switchTab('weekly')" id="tab-weekly">
-    <span class="tab-icon">⊟</span>
-    <span>Week</span>
-  </button>
 </div>
 
 <script>
 // ══════════════════════════════════════════════
-// DATA
+// SUPABASE
 // ══════════════════════════════════════════════
+const { createClient } = supabase;
+const sb = createClient(
+  'https://wkqlfxdukvekjgluxbaq.supabase.co',
+  'sb_publishable_lZtn9T2ryYWNemQVXl0KvQ_qO9uYg7I'
+);
 
-const DAY_TYPES = {
-  0: 'rest',   // Sun
-  1: 'ride',   // Mon
-  2: 'lift',   // Tue
-  3: 'ride',   // Wed
-  4: 'lift',   // Thu
-  5: 'lift',   // Fri
-  6: 'ride',   // Sat
-};
-
-// Tasks per day type. time = minutes from midnight for window open
-// window = minutes the window stays open
-const TASK_TEMPLATES = {
-  ride: [
-    { id:'water',    time: 7*60,      window: 30,  icon:'💧', type:'water',  name:'Morning Water', desc:'500ml water on waking — starts hydration + cortisol' },
-    { id:'breakfast',time: 7*60+15,   window: 45,  icon:'🍳', type:'eat',    name:'Breakfast', desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
-    { id:'prework',  time: 10*60+45,  window: 30,  icon:'🍌', type:'eat',    name:'Pre-Workout Fuel', desc:'Banana or rice cakes + electrolytes (30–50g fast carbs)' },
-    { id:'ride',     time: 11*60+30,  window: 90,  icon:'🚴', type:'train',  name:'PELOTON RIDE', desc:'Power Zone ride · 30–60 min · Keep HR 105–135 bpm' },
-    { id:'postwork', time: 12*60+30,  window: 45,  icon:'🥤', type:'eat',    name:'Post-Ride Shake', desc:'40g protein + 30–50g carbs within 45 min of session' },
-    { id:'lunch',    time: 13*60,     window: 60,  icon:'🍽', type:'eat',    name:'Lunch', desc:'~50g protein · Largest carb meal of the day' },
-    { id:'snack',    time: 17*60+30,  window: 60,  icon:'🧀', type:'eat',    name:'Planned Snack', desc:'Pre-approved only: cottage cheese, shake, or yogurt (~25–35g protein)' },
-    { id:'dinner',   time: 18*60+30,  window: 90,  icon:'🍣', type:'eat',    name:'Dinner', desc:'~40–50g protein · Protein + veg · Lighter carbs · For two' },
-    { id:'kitchen',  time: 20*60,     window: 30,  icon:'🚫', type:'work',   name:'Kitchen Closes', desc:'Hard stop. Brush teeth. Done eating for the day.' },
-    { id:'magnesium',time: 21*60+30,  window: 60,  icon:'💊', type:'supp',   name:'Magnesium Glycinate', desc:'300–400mg · CanPrev or Thorne · 30–60 min before bed' },
-    { id:'sleep',    time: 22*60,     window: 30,  icon:'🌙', type:'sleep',  name:'Lights Out', desc:'Target 7.5–8.5 hrs · Room 65–68°F · No screens · 7am wake' },
-  ],
-  lift: [
-    { id:'water',    time: 7*60,      window: 30,  icon:'💧', type:'water',  name:'Morning Water', desc:'500ml water on waking' },
-    { id:'breakfast',time: 7*60+15,   window: 45,  icon:'🍳', type:'eat',    name:'Breakfast', desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
-    { id:'prework',  time: 10*60+45,  window: 30,  icon:'🍌', type:'eat',    name:'Pre-Workout Fuel', desc:'Banana or rice cakes + electrolytes (30–50g carbs)' },
-    { id:'lift',     time: 11*60+30,  window: 90,  icon:'🏋️', type:'train',  name:'PPL LIFT SESSION', desc:'Pull / Push / Legs routine · 45–60 min' },
-    { id:'postwork', time: 12*60+30,  window: 45,  icon:'🥤', type:'eat',    name:'Post-Lift Shake', desc:'40g protein + 30–50g carbs within 45 min' },
-    { id:'lunch',    time: 13*60,     window: 60,  icon:'🍽', type:'eat',    name:'Lunch', desc:'~50g protein · Moderate carbs' },
-    { id:'snack',    time: 17*60+30,  window: 60,  icon:'🧀', type:'eat',    name:'Planned Snack', desc:'Pre-approved only (~25–35g protein)' },
-    { id:'dinner',   time: 18*60+30,  window: 90,  icon:'🍗', type:'eat',    name:'Dinner', desc:'~40–50g protein · Protein + veg · For two' },
-    { id:'kitchen',  time: 20*60,     window: 30,  icon:'🚫', type:'work',   name:'Kitchen Closes', desc:'Hard stop. Done eating for the day.' },
-    { id:'magnesium',time: 21*60+30,  window: 60,  icon:'💊', type:'supp',   name:'Magnesium Glycinate', desc:'300–400mg · 30–60 min before bed' },
-    { id:'sleep',    time: 22*60,     window: 30,  icon:'🌙', type:'sleep',  name:'Lights Out', desc:'Target 7.5–8.5 hrs · Room 65–68°F · 7am wake' },
-  ],
-  rest: [
-    { id:'water',    time: 7*60,      window: 30,  icon:'💧', type:'water',  name:'Morning Water', desc:'500ml water on waking' },
-    { id:'breakfast',time: 7*60+15,   window: 45,  icon:'🍳', type:'eat',    name:'Breakfast', desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
-    { id:'lunch',    time: 13*60,     window: 90,  icon:'🍽', type:'eat',    name:'Lunch (Light)', desc:'~38g protein · Lower carbs on rest day' },
-    { id:'snack',    time: 17*60+30,  window: 60,  icon:'🧀', type:'eat',    name:'Planned Snack', desc:'Pre-approved only (~25g protein)' },
-    { id:'dinner',   time: 18*60+30,  window: 90,  icon:'🐟', type:'eat',    name:'Dinner', desc:'~44g protein · Protein + veg · Minimal starch · For two' },
-    { id:'kitchen',  time: 20*60,     window: 30,  icon:'🚫', type:'work',   name:'Kitchen Closes', desc:'Hard stop.' },
-    { id:'magnesium',time: 21*60+30,  window: 60,  icon:'💊', type:'supp',   name:'Magnesium Glycinate', desc:'300–400mg · 30–60 min before bed' },
-    { id:'sleep',    time: 22*60,     window: 30,  icon:'🌙', type:'sleep',  name:'Lights Out', desc:'Target 7.5–8.5 hrs · Same 7am wake time' },
-  ]
-};
-
-const MEALS = {
-  0: { // Sun
-    breakfast: { name:'Veggie Scramble', detail:'4 eggs, spinach, capsicum, feta, turkey bacon', protein:'46g', cal:'380' },
-    lunch:     { name:'Chicken Lettuce Wraps + Soup', detail:'Light rest day meal', protein:'38g', cal:'340' },
-    snack:     { name:'String Cheese x2 + Apple', detail:'Quick and clean', protein:'14g', cal:'220' },
-    dinner:    { name:'Pan-Seared White Fish + Roasted Veg + Quinoa', detail:'Cod or barramundi, light carbs', protein:'44g', cal:'460' },
-  },
-  1: { // Mon
-    breakfast: { name:'4 Scrambled Eggs + Turkey Bacon + Greek Yogurt', detail:'High protein start', protein:'48g', cal:'420' },
-    lunch:     { name:'Smash Burger Bowl ★ BATCH COOK', detail:'Lean beef, lettuce, tomato, pickles, special sauce on rice · Makes 2 servings', protein:'50g', cal:'580', batch:'Leftovers → Tuesday lunch' },
-    snack:     { name:'Cottage Cheese + Blueberries', detail:'1 cup cottage cheese', protein:'28g', cal:'200' },
-    dinner:    { name:'Teriyaki Salmon ★ BATCH COOK', detail:'Salmon fillet, jasmine rice, roasted broccoli · Makes 2 servings', protein:'42g', cal:'520', batch:'Leftovers → Tuesday dinner' },
-  },
-  2: { // Tue
-    breakfast: { name:'Egg White Omelette + Turkey Bacon + Avocado', detail:'4 whole eggs, half avocado', protein:'45g', cal:'410' },
-    lunch:     { name:'Smash Burger Bowl — Leftovers ♻', detail:'From Monday — reheat 2 min', protein:'50g', cal:'580', leftover:true },
-    snack:     { name:'Protein Shake + Banana', detail:'30g whey or plant protein', protein:'32g', cal:'250' },
-    dinner:    { name:'Teriyaki Salmon — Leftovers ♻', detail:'From Monday — reheat gently', protein:'42g', cal:'520', leftover:true },
-  },
-  3: { // Wed
-    breakfast: { name:'4 Fried Eggs + Turkey Bacon + Sourdough Toast', detail:'2 slices sourdough', protein:'46g', cal:'440' },
-    lunch:     { name:'Seared Tuna Steak Bowl ★ BATCH COOK', detail:'Tuna, edamame, cucumber, avocado, sesame, brown rice · Makes 2 servings', protein:'52g', cal:'540', batch:'Leftovers → Thursday lunch' },
-    snack:     { name:'Hard Boiled Eggs x2 + Almonds', detail:'20g almonds', protein:'18g', cal:'240' },
-    dinner:    { name:'Turkey Meatballs in Tomato Sauce ★ BATCH COOK', detail:'Ground turkey, zucchini noodles, parmesan · Makes 2 servings', protein:'48g', cal:'480', batch:'Leftovers → Thursday dinner' },
-  },
-  4: { // Thu
-    breakfast: { name:'Egg Muffins x4 + Greek Yogurt', detail:'Eggs, spinach, turkey bacon baked muffins', protein:'48g', cal:'400' },
-    lunch:     { name:'Tuna Steak Bowl — Leftovers ♻', detail:'From Wednesday — serve cold or reheat', protein:'52g', cal:'540', leftover:true },
-    snack:     { name:'Cottage Cheese + Apple + Walnuts', detail:'Balanced fat + protein + fibre', protein:'26g', cal:'260' },
-    dinner:    { name:'Turkey Meatballs — Leftovers ♻', detail:'From Wednesday — reheat in sauce', protein:'48g', cal:'480', leftover:true },
-  },
-  5: { // Fri
-    breakfast: { name:'4 Poached Eggs + Turkey Bacon + Avocado', detail:'Classic high-protein breakfast', protein:'45g', cal:'420' },
-    lunch:     { name:'Grilled Salmon Caesar ★ BATCH COOK', detail:'Romaine, parmesan, croutons, salmon fillet · Makes 2 servings', protein:'48g', cal:'510', batch:'Leftovers → Saturday lunch' },
-    snack:     { name:'Protein Shake + Rice Cakes + PB', detail:'2 rice cakes, 1 tbsp peanut butter', protein:'30g', cal:'310' },
-    dinner:    { name:'Smash Burgers + Sweet Potato Fries ★ BATCH COOK', detail:'Lean beef, brioche bun, caramelised onion · Makes 2 servings', protein:'50g', cal:'620', batch:'Leftovers → Saturday dinner' },
-  },
-  6: { // Sat
-    breakfast: { name:"Weekend Eggs Benedict", detail:'Eggs, turkey bacon, English muffin, light hollandaise', protein:'44g', cal:'460' },
-    lunch:     { name:'Salmon Caesar — Leftovers ♻', detail:'From Friday — tastes great cold', protein:'48g', cal:'510', leftover:true },
-    snack:     { name:'Greek Yogurt + Honey + Berries + Granola', detail:'30g granola', protein:'22g', cal:'310' },
-    dinner:    { name:'Smash Burgers + Sweet Potato Fries — Leftovers ♻', detail:'From Friday', protein:'50g', cal:'620', leftover:true },
-  },
-};
-
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
-
-const STATE_KEY = 'blueprint_v3';
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    return raw ? JSON.parse(raw) : { completions: {}, streak: 0, lastStreakDate: null };
-  } catch(e) {
-    return { completions: {}, streak: 0, lastStreakDate: null };
-  }
-}
-
-function saveState(s) {
-  try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch(e) {}
-}
-
-let state = loadState();
+let currentUser = null;
+let currentProfile = null;
+let userCompletions = {}; // { dateKey: { taskId: status } }
+let otherUserCompletions = {}; // partner's completions
 let currentTab = 'daily';
 let clockInterval = null;
 
 // ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const DAY_TYPES = { 0:'rest', 1:'ride', 2:'lift', 3:'ride', 4:'lift', 5:'lift', 6:'ride' };
+
+const TASK_TEMPLATES = {
+  ride: [
+    { id:'water',    time:7*60,     window:30,  icon:'💧', type:'water', name:'Morning Water',       desc:'500ml water on waking' },
+    { id:'breakfast',time:7*60+15, window:45,  icon:'🍳', type:'eat',   name:'Breakfast',            desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
+    { id:'prework',  time:10*60+45,window:30,  icon:'🍌', type:'eat',   name:'Pre-Workout Fuel',     desc:'Banana or rice cakes + electrolytes (30–50g carbs)' },
+    { id:'ride',     time:11*60+30,window:90,  icon:'🚴', type:'train', name:'PELOTON RIDE',         desc:'Power Zone ride · 30–60 min · Zone 2/3' },
+    { id:'postwork', time:12*60+30,window:45,  icon:'🥤', type:'eat',   name:'Post-Ride Shake',      desc:'40g protein + 30–50g carbs within 45 min' },
+    { id:'lunch',    time:13*60,   window:60,  icon:'🍽', type:'eat',   name:'Lunch',                desc:'~50g protein · Largest carb meal of the day' },
+    { id:'snack',    time:17*60+30,window:60,  icon:'🧀', type:'eat',   name:'Planned Snack',        desc:'Pre-approved only: cottage cheese, shake, or yogurt (~25–35g protein)' },
+    { id:'dinner',   time:18*60+30,window:90,  icon:'🍣', type:'eat',   name:'Dinner',               desc:'~40–50g protein · Protein + veg · For two' },
+    { id:'kitchen',  time:20*60,   window:30,  icon:'🚫', type:'work',  name:'Kitchen Closes',       desc:'Hard stop. Done eating.' },
+    { id:'magnesium',time:21*60+30,window:60,  icon:'💊', type:'supp',  name:'Magnesium Glycinate',  desc:'300–400mg · CanPrev or Thorne · 30–60 min before bed' },
+    { id:'sleep',    time:22*60,   window:30,  icon:'🌙', type:'sleep', name:'Lights Out',           desc:'Target 7.5–8.5 hrs · Room 65–68°F · 7am wake' },
+  ],
+  lift: [
+    { id:'water',    time:7*60,     window:30,  icon:'💧', type:'water', name:'Morning Water',       desc:'500ml water on waking' },
+    { id:'breakfast',time:7*60+15, window:45,  icon:'🍳', type:'eat',   name:'Breakfast',            desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
+    { id:'prework',  time:10*60+45,window:30,  icon:'🍌', type:'eat',   name:'Pre-Workout Fuel',     desc:'Banana or rice cakes + electrolytes (30–50g carbs)' },
+    { id:'lift',     time:11*60+30,window:90,  icon:'🏋️', type:'train', name:'PPL LIFT SESSION',    desc:'Pull / Push / Legs · 45–60 min' },
+    { id:'postwork', time:12*60+30,window:45,  icon:'🥤', type:'eat',   name:'Post-Lift Shake',      desc:'40g protein + 30–50g carbs within 45 min' },
+    { id:'lunch',    time:13*60,   window:60,  icon:'🍽', type:'eat',   name:'Lunch',                desc:'~50g protein · Moderate carbs' },
+    { id:'snack',    time:17*60+30,window:60,  icon:'🧀', type:'eat',   name:'Planned Snack',        desc:'Pre-approved only (~25–35g protein)' },
+    { id:'dinner',   time:18*60+30,window:90,  icon:'🍗', type:'eat',   name:'Dinner',               desc:'~40–50g protein · Protein + veg · For two' },
+    { id:'kitchen',  time:20*60,   window:30,  icon:'🚫', type:'work',  name:'Kitchen Closes',       desc:'Hard stop.' },
+    { id:'magnesium',time:21*60+30,window:60,  icon:'💊', type:'supp',  name:'Magnesium Glycinate',  desc:'300–400mg · 30–60 min before bed' },
+    { id:'sleep',    time:22*60,   window:30,  icon:'🌙', type:'sleep', name:'Lights Out',           desc:'Target 7.5–8.5 hrs · Room 65–68°F · 7am wake' },
+  ],
+  rest: [
+    { id:'water',    time:7*60,     window:30,  icon:'💧', type:'water', name:'Morning Water',       desc:'500ml water on waking' },
+    { id:'breakfast',time:7*60+15, window:45,  icon:'🍳', type:'eat',   name:'Breakfast',            desc:'4 eggs + turkey bacon + Greek yogurt (~45g protein)' },
+    { id:'lunch',    time:13*60,   window:90,  icon:'🍽', type:'eat',   name:'Lunch (Light)',         desc:'~38g protein · Lower carbs on rest day' },
+    { id:'snack',    time:17*60+30,window:60,  icon:'🧀', type:'eat',   name:'Planned Snack',        desc:'Pre-approved only (~25g protein)' },
+    { id:'dinner',   time:18*60+30,window:90,  icon:'🐟', type:'eat',   name:'Dinner',               desc:'~44g protein · Protein + veg · Minimal starch · For two' },
+    { id:'kitchen',  time:20*60,   window:30,  icon:'🚫', type:'work',  name:'Kitchen Closes',       desc:'Hard stop.' },
+    { id:'magnesium',time:21*60+30,window:60,  icon:'💊', type:'supp',  name:'Magnesium Glycinate',  desc:'300–400mg · 30–60 min before bed' },
+    { id:'sleep',    time:22*60,   window:30,  icon:'🌙', type:'sleep', name:'Lights Out',           desc:'Target 7.5–8.5 hrs · Same 7am wake time' },
+  ]
+};
+
+const MEALS = {
+  0: { breakfast:{name:'Veggie Scramble',detail:'4 eggs, spinach, capsicum, feta, turkey bacon',protein:'46g',cal:'380'}, lunch:{name:'Chicken Lettuce Wraps + Soup',detail:'Light rest day meal',protein:'38g',cal:'340'}, snack:{name:'String Cheese x2 + Apple',detail:'Quick and clean',protein:'14g',cal:'220'}, dinner:{name:'Pan-Seared White Fish + Roasted Veg + Quinoa',detail:'Cod or barramundi',protein:'44g',cal:'460'} },
+  1: { breakfast:{name:'4 Scrambled Eggs + Turkey Bacon + Greek Yogurt',detail:'High protein start',protein:'48g',cal:'420'}, lunch:{name:'Smash Burger Bowl ★ BATCH COOK',detail:'Lean beef, lettuce, tomato, pickles, special sauce on rice · Makes 2 servings',protein:'50g',cal:'580',batch:'Leftovers → Tuesday lunch'}, snack:{name:'Cottage Cheese + Blueberries',detail:'1 cup cottage cheese',protein:'28g',cal:'200'}, dinner:{name:'Teriyaki Salmon ★ BATCH COOK',detail:'Salmon fillet, jasmine rice, roasted broccoli · Makes 2 servings',protein:'42g',cal:'520',batch:'Leftovers → Tuesday dinner'} },
+  2: { breakfast:{name:'Egg White Omelette + Turkey Bacon + Avocado',detail:'4 whole eggs, half avocado',protein:'45g',cal:'410'}, lunch:{name:'Smash Burger Bowl — Leftovers ♻',detail:'From Monday — reheat 2 min',protein:'50g',cal:'580',leftover:true}, snack:{name:'Protein Shake + Banana',detail:'30g whey or plant protein',protein:'32g',cal:'250'}, dinner:{name:'Teriyaki Salmon — Leftovers ♻',detail:'From Monday — reheat gently',protein:'42g',cal:'520',leftover:true} },
+  3: { breakfast:{name:'4 Fried Eggs + Turkey Bacon + Sourdough Toast',detail:'2 slices sourdough',protein:'46g',cal:'440'}, lunch:{name:'Seared Tuna Steak Bowl ★ BATCH COOK',detail:'Tuna, edamame, cucumber, avocado, sesame, brown rice · Makes 2 servings',protein:'52g',cal:'540',batch:'Leftovers → Thursday lunch'}, snack:{name:'Hard Boiled Eggs x2 + Almonds',detail:'20g almonds',protein:'18g',cal:'240'}, dinner:{name:'Turkey Meatballs in Tomato Sauce ★ BATCH COOK',detail:'Ground turkey, zucchini noodles, parmesan · Makes 2 servings',protein:'48g',cal:'480',batch:'Leftovers → Thursday dinner'} },
+  4: { breakfast:{name:'Egg Muffins x4 + Greek Yogurt',detail:'Eggs, spinach, turkey bacon baked muffins',protein:'48g',cal:'400'}, lunch:{name:'Tuna Steak Bowl — Leftovers ♻',detail:'From Wednesday',protein:'52g',cal:'540',leftover:true}, snack:{name:'Cottage Cheese + Apple + Walnuts',detail:'Balanced fat + protein + fibre',protein:'26g',cal:'260'}, dinner:{name:'Turkey Meatballs — Leftovers ♻',detail:'From Wednesday — reheat in sauce',protein:'48g',cal:'480',leftover:true} },
+  5: { breakfast:{name:'4 Poached Eggs + Turkey Bacon + Avocado',detail:'Classic high-protein breakfast',protein:'45g',cal:'420'}, lunch:{name:'Grilled Salmon Caesar ★ BATCH COOK',detail:'Romaine, parmesan, croutons, salmon · Makes 2 servings',protein:'48g',cal:'510',batch:'Leftovers → Saturday lunch'}, snack:{name:'Protein Shake + Rice Cakes + PB',detail:'2 rice cakes, 1 tbsp peanut butter',protein:'30g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries ★ BATCH COOK',detail:'Lean beef, brioche, caramelised onion · Makes 2 servings',protein:'50g',cal:'620',batch:'Leftovers → Saturday dinner'} },
+  6: { breakfast:{name:'Weekend Eggs Benedict',detail:'Eggs, turkey bacon, English muffin, light hollandaise',protein:'44g',cal:'460'}, lunch:{name:'Salmon Caesar — Leftovers ♻',detail:'From Friday',protein:'48g',cal:'510',leftover:true}, snack:{name:'Greek Yogurt + Honey + Berries + Granola',detail:'30g granola',protein:'22g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries — Leftovers ♻',detail:'From Friday',protein:'50g',cal:'620',leftover:true} },
+};
+
+// ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
-
 function todayKey(offset=0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
+  const d = new Date(); d.setDate(d.getDate()+offset);
   return d.toISOString().slice(0,10);
 }
 
-function nowMinutes() {
-  const n = new Date();
-  return n.getHours()*60 + n.getMinutes();
-}
+function nowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
 
 function fmtTime(mins) {
-  const h = Math.floor(mins/60);
-  const m = mins % 60;
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hh = h % 12 || 12;
-  return `${hh}:${String(m).padStart(2,'0')} ${ampm}`;
+  const h=Math.floor(mins/60), m=mins%60, ap=h>=12?'PM':'AM', hh=h%12||12;
+  return `${hh}:${String(m).padStart(2,'0')} ${ap}`;
 }
 
 function dayType(offset=0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return DAY_TYPES[d.getDay()] || 'rest';
+  const d=new Date(); d.setDate(d.getDate()+offset);
+  return DAY_TYPES[d.getDay()]||'rest';
 }
 
 function dayName(offset=0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toLocaleDateString('en-US', { weekday:'long' });
-}
-
-function taskStatus(taskId, dateKey) {
-  const completions = state.completions[dateKey] || {};
-  return completions[taskId] || 'pending'; // pending | done | missed | late
-}
-
-function setTaskStatus(taskId, status, dateKey) {
-  if (!state.completions[dateKey]) state.completions[dateKey] = {};
-  state.completions[dateKey][taskId] = status;
-  saveState(state);
+  const d=new Date(); d.setDate(d.getDate()+offset);
+  return d.toLocaleDateString('en-US',{weekday:'long'});
 }
 
 function getWindowStatus(task) {
-  const now = nowMinutes();
-  const open = task.time;
-  const close = task.time + task.window;
-  if (now < open) return 'upcoming';
-  if (now >= open && now <= close) return 'open';
+  const now=nowMins(), open=task.time, close=task.time+task.window;
+  if(now<open) return 'upcoming';
+  if(now>=open&&now<=close) return 'open';
   return 'expired';
 }
 
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' '+type : '');
-  setTimeout(() => t.className = 'toast', 2200);
+function showToast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast',2200);
 }
 
 function getDayTypeLabel(dt) {
-  if (dt === 'ride') return `<span style="color:var(--accent);background:var(--accent-dim);border:1px solid rgba(200,240,60,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;">RIDE DAY</span>`;
-  if (dt === 'lift') return `<span style="color:var(--blue);background:var(--blue-dim);border:1px solid rgba(60,168,240,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;">LIFT DAY</span>`;
-  return `<span style="color:var(--muted);background:var(--muted2);padding:2px 8px;font-size:9px;letter-spacing:1px;">REST DAY</span>`;
+  if(dt==='ride') return `<span style="color:var(--accent);background:var(--accent-dim);border:1px solid rgba(200,240,60,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">RIDE</span>`;
+  if(dt==='lift') return `<span style="color:var(--blue);background:var(--blue-dim);border:1px solid rgba(60,168,240,0.3);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">LIFT</span>`;
+  return `<span style="color:var(--muted);background:var(--muted2);padding:2px 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;">REST</span>`;
+}
+
+function taskStatus(taskId, dateKey) {
+  return (userCompletions[dateKey]||{})[taskId]||'pending';
+}
+
+function getDayCompletion(dateKey, completions) {
+  const d = new Date(dateKey+'T12:00:00');
+  const dt = DAY_TYPES[d.getDay()]||'rest';
+  const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+  const comp = completions[dateKey]||{};
+  const done = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late').length;
+  const missed = tasks.filter(t=>comp[t.id]==='missed').length;
+  return { done, missed, total:tasks.length };
 }
 
 // ══════════════════════════════════════════════
-// STREAK CALCULATION
+// AUTH
 // ══════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('signupForm').style.display = tab==='signup'?'block':'none';
+  document.getElementById('loginTab').className = 'auth-tab'+(tab==='login'?' active':'');
+  document.getElementById('signupTab').className = 'auth-tab'+(tab==='signup'?' active':'');
+  document.getElementById('authError').textContent = '';
+}
 
-function calcStreak() {
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  document.getElementById('authError').textContent = '';
+  const btn = document.querySelector('#loginForm .btn-primary');
+  btn.disabled = true; btn.textContent = 'SIGNING IN...';
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    document.getElementById('authError').textContent = error.message;
+    btn.disabled = false; btn.textContent = 'SIGN IN';
+  }
+}
+
+async function handleSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  document.getElementById('authError').textContent = '';
+
+  if (!name) { document.getElementById('authError').textContent = 'Please enter your name.'; return; }
+
+  const btn = document.querySelector('#signupForm .btn-primary');
+  btn.disabled = true; btn.textContent = 'CREATING...';
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) {
+    document.getElementById('authError').textContent = error.message;
+    btn.disabled = false; btn.textContent = 'CREATE ACCOUNT';
+    return;
+  }
+
+  if (data.user) {
+    await sb.from('profiles').insert({ id: data.user.id, name });
+  }
+  showToast('Account created! Check your email to confirm.');
+  btn.disabled = false; btn.textContent = 'CREATE ACCOUNT';
+}
+
+async function handleSignout() {
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null;
+  userCompletions = {}; otherUserCompletions = {};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════
+async function loadUserData(userId) {
+  // Load last 30 days of completions
+  const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
+  const from = thirtyDaysAgo.toISOString().slice(0,10);
+
+  const { data } = await sb.from('task_completions')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', from);
+
+  const completions = {};
+  if (data) {
+    data.forEach(row => {
+      if (!completions[row.date]) completions[row.date] = {};
+      completions[row.date][row.task_id] = row.status;
+    });
+  }
+  return completions;
+}
+
+async function loadOtherUserData() {
+  // Load partner's data for the Together view
+  const partnerName = currentProfile?.name?.toLowerCase() === 'steve' ? 'Bekky' : 'Steve';
+  const { data: profiles } = await sb.from('profiles').select('id,name');
+  const partner = profiles?.find(p => p.name?.toLowerCase() === partnerName.toLowerCase());
+  if (!partner) return {};
+
+  const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
+  const from = thirtyDaysAgo.toISOString().slice(0,10);
+
+  const { data } = await sb.from('task_completions')
+    .select('*')
+    .eq('user_id', partner.id)
+    .gte('date', from);
+
+  const completions = {};
+  if (data) {
+    data.forEach(row => {
+      if (!completions[row.date]) completions[row.date] = {};
+      completions[row.date][row.task_id] = row.status;
+    });
+  }
+  return completions;
+}
+
+async function saveCompletion(taskId, status, dateKey) {
+  const userId = currentUser.id;
+  const { error } = await sb.from('task_completions')
+    .upsert({ user_id:userId, date:dateKey, task_id:taskId, status }, { onConflict:'user_id,date,task_id' });
+  if (error) { showToast('Save error — check connection','red'); return false; }
+  if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
+  userCompletions[dateKey][taskId] = status;
+  return true;
+}
+
+async function deleteCompletion(taskId, dateKey) {
+  await sb.from('task_completions')
+    .delete()
+    .eq('user_id', currentUser.id)
+    .eq('date', dateKey)
+    .eq('task_id', taskId);
+  if (userCompletions[dateKey]) delete userCompletions[dateKey][taskId];
+}
+
+// ══════════════════════════════════════════════
+// AUTO MARK MISSED
+// ══════════════════════════════════════════════
+async function autoMarkMissed() {
+  const dk = todayKey();
+  const dt = dayType();
+  const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+  const now = nowMins();
+  for (const task of tasks) {
+    const status = taskStatus(task.id, dk);
+    const closeTime = task.time + task.window;
+    if (status === 'pending' && now > closeTime) {
+      await saveCompletion(task.id, 'missed', dk);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+// STREAK
+// ══════════════════════════════════════════════
+function calcStreak(completions) {
   let streak = 0;
-  let d = new Date();
-  d.setDate(d.getDate() - 1); // start from yesterday
-  for (let i = 0; i < 60; i++) {
+  const d = new Date();
+  // Check yesterday backwards
+  d.setDate(d.getDate()-1);
+  for (let i=0; i<60; i++) {
     const key = d.toISOString().slice(0,10);
-    const comp = state.completions[key] || {};
     const dt = DAY_TYPES[d.getDay()];
-    const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
-    const hasAny = tasks.some(t => comp[t.id] === 'done' || comp[t.id] === 'late');
+    const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+    const comp = completions[key]||{};
+    const hasAny = tasks.some(t=>comp[t.id]==='done'||comp[t.id]==='late');
     if (!hasAny) break;
     streak++;
-    d.setDate(d.getDate() - 1);
+    d.setDate(d.getDate()-1);
   }
-  // check if today has any completions — add to streak
-  const todayComp = state.completions[todayKey()] || {};
+  // Check today
+  const todayComp = completions[todayKey()]||{};
   const todayDt = dayType();
-  const todayTasks = TASK_TEMPLATES[todayDt] || TASK_TEMPLATES.rest;
-  const todayHasAny = todayTasks.some(t => todayComp[t.id] === 'done' || todayComp[t.id] === 'late');
-  if (todayHasAny) streak++;
+  const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
+  if (todayTasks.some(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late')) streak++;
   return streak;
 }
 
-function getDayCompletion(dateKey, offset=0) {
-  const dt = (() => { const d = new Date(); d.setDate(d.getDate() + offset); return DAY_TYPES[d.getDay()]; })();
-  const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
-  const comp = state.completions[dateKey] || {};
-  const done = tasks.filter(t => comp[t.id] === 'done' || comp[t.id] === 'late').length;
-  const missed = tasks.filter(t => comp[t.id] === 'missed').length;
-  return { done, missed, total: tasks.length };
-}
-
 // ══════════════════════════════════════════════
-// DAILY VIEW RENDER
+// DAILY VIEW
 // ══════════════════════════════════════════════
-
 function renderDaily() {
-  const now = nowMinutes();
   const dk = todayKey();
   const dt = dayType();
-  const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
+  const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+  const comp = userCompletions[dk]||{};
 
-  // Nav date
-  const today = new Date();
-  document.getElementById('navDateText').textContent = today.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
+  // Nav
+  document.getElementById('navUser').textContent = (currentProfile?.name||'').toUpperCase();
   document.getElementById('navDayType').innerHTML = getDayTypeLabel(dt);
 
   // Streak
-  const streak = calcStreak();
+  const streak = calcStreak(userCompletions);
   document.getElementById('streakNum').textContent = streak;
   document.getElementById('statStreak').textContent = streak;
 
-  // Streak dots (last 7 days)
+  // Streak dots
   const dotsEl = document.getElementById('streakDots');
   dotsEl.innerHTML = '';
-  const days = ['S','M','T','W','T','F','S'];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0,10);
-    const dType = DAY_TYPES[d.getDay()];
-    const { done, missed, total } = getDayCompletion(key);
-    const isToday = i === 0;
-    let cls = '';
-    if (isToday) cls = 'today';
-    else if (done > 0 && missed === 0) cls = 'done';
-    else if (done > 0) cls = 'partial';
-    const dot = document.createElement('div');
-    dot.className = 'streak-dot ' + cls;
-    dot.innerHTML = `<span>${days[d.getDay()]}</span>`;
+  const dayLetters = ['S','M','T','W','T','F','S'];
+  for (let i=6; i>=0; i--) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const {done,missed}=getDayCompletion(key,userCompletions);
+    const isToday=i===0;
+    let cls='';
+    if(isToday) cls='today';
+    else if(done>0&&missed===0) cls='done';
+    else if(done>0) cls='partial';
+    const dot=document.createElement('div');
+    dot.className='streak-dot '+cls;
+    dot.innerHTML=`<span>${dayLetters[d.getDay()]}</span>`;
     dotsEl.appendChild(dot);
   }
 
   // Progress ring
-  const comp = state.completions[dk] || {};
-  const doneCount = tasks.filter(t => comp[t.id] === 'done' || comp[t.id] === 'late').length;
-  const pct = Math.round((doneCount / tasks.length) * 100);
-  const circumference = 263.9;
-  const offset = circumference - (pct / 100) * circumference;
+  const doneCount = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late').length;
+  const pct = Math.round((doneCount/tasks.length)*100);
+  const offset = 263.9 - (pct/100)*263.9;
   document.getElementById('ringFill').style.strokeDashoffset = offset;
-  document.getElementById('ringPct').textContent = pct + '%';
+  document.getElementById('ringPct').textContent = pct+'%';
 
-  // Next task
-  const nextTask = tasks.find(t => {
-    const st = comp[t.id] || 'pending';
-    return st === 'pending' || st === 'missed';
-  });
+  const titleMap = { ride:'Ride Day — Power Zone', lift:'Lift Day — PPL', rest:'Rest Day — Recovery' };
+  document.getElementById('ringTitle').textContent = titleMap[dt];
+
+  const nextTask = tasks.find(t => { const s=comp[t.id]||'pending'; return s==='pending'||s==='missed'; });
   if (nextTask) {
     const ws = getWindowStatus(nextTask);
-    if (ws === 'upcoming') {
-      document.getElementById('ringNextLabel').textContent = 'Coming up at ' + fmtTime(nextTask.time) + ':';
-    } else if (ws === 'open') {
-      document.getElementById('ringNextLabel').textContent = '🟢 Active now:';
-    } else {
-      document.getElementById('ringNextLabel').textContent = 'Missed — can still complete:';
-    }
+    document.getElementById('ringNextLabel').textContent = ws==='open' ? '🟢 Active now:' : ws==='upcoming' ? `Opens ${fmtTime(nextTask.time)}:` : 'Missed — still completable:';
     document.getElementById('ringNextTask').textContent = nextTask.name;
   } else {
     document.getElementById('ringNextLabel').textContent = '';
-    document.getElementById('ringNextTask').textContent = pct === 100 ? '🏆 All tasks done!' : 'Great work today!';
+    document.getElementById('ringNextTask').textContent = pct===100 ? '🏆 Perfect day!' : 'Great work today!';
   }
 
-  const titleMap = { ride:'Ride Day — Power Zone', lift:'Lift Day — PPL', rest:'Rest Day' };
-  document.getElementById('ringTitle').textContent = titleMap[dt];
-
-  // Task list
+  // Tasks
   const listEl = document.getElementById('taskList');
   listEl.innerHTML = '';
-
-  tasks.forEach((task, idx) => {
-    const status = comp[task.id] || 'pending';
+  tasks.forEach((task,idx) => {
+    const status = comp[task.id]||'pending';
     const ws = getWindowStatus(task);
-    const isActive = status === 'pending' && ws === 'open';
-    const isMissed = status === 'missed' || (status === 'pending' && ws === 'expired');
+    const isActive = status==='pending' && ws==='open';
 
-    const item = document.createElement('div');
-    item.className = 'task-item' + (isActive ? ' active-task' : '') + (status === 'done' ? ' done-task' : '') + (isMissed && status !== 'pending' ? ' missed-task' : '') + (status === 'late' ? ' late-task' : '');
-    item.style.animationDelay = (idx * 30) + 'ms';
-    item.id = 'task-' + task.id;
+    let statusIcon='○', statusCls='';
+    if(status==='done'){statusIcon='✓';statusCls='done';}
+    else if(status==='missed'){statusIcon='✗';statusCls='missed';}
+    else if(status==='late'){statusIcon='✓';statusCls='late';}
+    else if(isActive){statusIcon='●';statusCls='active';}
 
-    // Status icon
-    let statusIcon = '○';
-    let statusCls = '';
-    if (status === 'done') { statusIcon = '✓'; statusCls = 'done'; }
-    else if (status === 'missed') { statusIcon = '✗'; statusCls = 'missed'; }
-    else if (status === 'late') { statusIcon = '✓'; statusCls = 'late'; }
-    else if (isActive) { statusIcon = '●'; statusCls = 'active'; }
-
-    // Window pill
-    let pillHtml = '';
-    if (status === 'pending') {
-      if (ws === 'open') pillHtml = `<div class="window-pill open"><div class="dot"></div>WINDOW OPEN</div>`;
-      else if (ws === 'upcoming') pillHtml = `<div class="window-pill upcoming"><div class="dot"></div>OPENS AT ${fmtTime(task.time)}</div>`;
-      else pillHtml = `<div class="window-pill missed"><div class="dot"></div>WINDOW CLOSED</div>`;
-    } else if (status === 'missed') {
-      pillHtml = `<div class="window-pill missed"><div class="dot"></div>MISSED — TAP TO MARK LATE</div>`;
-    } else if (status === 'late') {
-      pillHtml = `<div class="window-pill" style="background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,132,60,0.3)"><div class="dot"></div>COMPLETED LATE</div>`;
+    let pillHtml='';
+    if(status==='pending'){
+      if(ws==='open') pillHtml=`<div class="window-pill open"><div class="dot"></div>WINDOW OPEN</div>`;
+      else if(ws==='upcoming') pillHtml=`<div class="window-pill upcoming"><div class="dot"></div>OPENS AT ${fmtTime(task.time)}</div>`;
+      else pillHtml=`<div class="window-pill missed-pill"><div class="dot"></div>WINDOW CLOSED</div>`;
+    } else if(status==='missed'){
+      pillHtml=`<div class="window-pill missed-pill"><div class="dot"></div>MISSED — MARK LATE BELOW</div>`;
+    } else if(status==='late'){
+      pillHtml=`<div class="window-pill" style="background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,132,60,0.3)"><div class="dot"></div>COMPLETED LATE ✓</div>`;
+    } else if(status==='done'){
+      pillHtml=`<div class="window-pill open"><div class="dot"></div>COMPLETE ✓</div>`;
     }
 
-    // Countdown for active
-    let countdownHtml = '';
-    if (isActive) {
-      const closeTime = task.time + task.window;
-      const minsLeft = closeTime - nowMinutes();
-      const pctLeft = (minsLeft / task.window) * 100;
-      countdownHtml = `
-        <div class="countdown-bar"><div class="countdown-fill" id="cd-${task.id}" style="width:${pctLeft}%"></div></div>
-        <div class="countdown-text" id="cdtext-${task.id}">Window closes in ${minsLeft} min · ${fmtTime(closeTime)}</div>
+    let actionHtml='';
+    if(status==='pending'&&ws==='open'){
+      const closeTime=task.time+task.window;
+      const minsLeft=closeTime-nowMins();
+      const pctLeft=(minsLeft/task.window)*100;
+      actionHtml=`
+        <div class="countdown-bar"><div class="countdown-fill" style="width:${Math.max(0,pctLeft)}%"></div></div>
+        <div class="countdown-text">Window closes in ${Math.max(0,minsLeft)} min · ${fmtTime(closeTime)}</div>
+        <button class="btn-complete" onclick="completeTask('${task.id}','${dk}',false)">✓ MARK COMPLETE</button>
       `;
+    } else if((status==='pending'&&ws==='expired')||status==='missed'){
+      actionHtml=`<button class="btn-late" onclick="completeTask('${task.id}','${dk}',true)">MARK AS LATE COMPLETION</button>`;
+    } else if(status==='done'||status==='late'){
+      actionHtml=`<button class="btn-late" onclick="undoTask('${task.id}','${dk}')" style="color:var(--muted);border-color:var(--border2)">UNDO</button>`;
     }
 
-    // Action button
-    let actionHtml = '';
-    if (status === 'pending' && ws === 'open') {
-      actionHtml = `
-        ${countdownHtml}
-        <button class="btn-complete" onclick="completeTask('${task.id}', '${dk}', false)">
-          ✓ MARK COMPLETE
-        </button>
-      `;
-    } else if (status === 'pending' && ws === 'expired') {
-      actionHtml = `<button class="btn-late" onclick="completeTask('${task.id}', '${dk}', true)">MARK AS LATE COMPLETION</button>`;
-    } else if (status === 'missed') {
-      actionHtml = `<button class="btn-late" onclick="completeTask('${task.id}', '${dk}', true)">MARK AS LATE COMPLETION</button>`;
-    }
-
-    item.innerHTML = `
-      <div class="task-header" onclick="toggleTaskDetail('${task.id}')">
+    const item=document.createElement('div');
+    item.className='task-item'+(isActive?' active-task':'')+(status==='done'?' done-task':'')+(status==='missed'?' missed-task':'')+(status==='late'?' late-task':'');
+    item.style.animationDelay=(idx*25)+'ms';
+    item.id='task-'+task.id;
+    item.innerHTML=`
+      <div class="task-header" onclick="toggleTask('${task.id}')">
         <div class="task-time">${fmtTime(task.time)}</div>
         <div class="task-icon ${task.type}">${task.icon}</div>
         <div class="task-body">
           <div class="task-name">${task.name}</div>
           <div class="task-desc">${task.desc}</div>
         </div>
-        <div class="task-status ${statusCls}" onclick="event.stopPropagation(); handleStatusTap('${task.id}', '${dk}')">${statusIcon}</div>
+        <div class="task-status ${statusCls}" onclick="event.stopPropagation();quickComplete('${task.id}','${dk}')">${statusIcon}</div>
       </div>
       <div class="task-action">
         ${pillHtml}
         ${actionHtml}
       </div>
     `;
-
     listEl.appendChild(item);
   });
 
-  // Meal list
-  renderMeals('mealList', 0);
+  renderMeals('mealList',0);
 }
 
-function toggleTaskDetail(taskId) {
-  const el = document.getElementById('task-' + taskId);
-  if (el) el.classList.toggle('active-task');
+function toggleTask(taskId) {
+  const el=document.getElementById('task-'+taskId);
+  if(el) el.classList.toggle('active-task');
 }
 
-function handleStatusTap(taskId, dateKey) {
-  const status = taskStatus(taskId, dateKey);
-  if (status === 'done' || status === 'late') {
-    // Undo
-    setTaskStatus(taskId, 'pending', dateKey);
-    showToast('Unmarked ↩', 'orange');
-    renderDaily();
-  } else if (status === 'pending') {
-    const ws = getWindowStatus(TASK_TEMPLATES[dayType()].find(t => t.id === taskId) || {time:0,window:60});
-    if (ws === 'open') completeTask(taskId, dateKey, false);
-    else completeTask(taskId, dateKey, true);
+async function quickComplete(taskId, dateKey) {
+  const status=taskStatus(taskId,dateKey);
+  if(status==='done'||status==='late') {
+    await undoTask(taskId,dateKey);
+  } else {
+    const task=(TASK_TEMPLATES[dayType()]||TASK_TEMPLATES.rest).find(t=>t.id===taskId);
+    const ws=task?getWindowStatus(task):'expired';
+    await completeTask(taskId,dateKey,ws!=='open');
   }
 }
 
-function completeTask(taskId, dateKey, isLate) {
-  setTaskStatus(taskId, isLate ? 'late' : 'done', dateKey);
-  const item = document.getElementById('task-' + taskId);
-  if (item) item.classList.add('complete-flash');
-  showToast(isLate ? '✓ Marked late — still counts!' : '✓ Task complete!', isLate ? 'orange' : '');
-  setTimeout(() => renderDaily(), 400);
+async function completeTask(taskId, dateKey, isLate) {
+  const ok=await saveCompletion(taskId,isLate?'late':'done',dateKey);
+  if(!ok) return;
+  showToast(isLate?'✓ Marked late — still counts!':'✓ Task complete!',isLate?'orange':'');
+  renderDaily();
+}
+
+async function undoTask(taskId, dateKey) {
+  await deleteCompletion(taskId, dateKey);
+  showToast('Unmarked ↩','orange');
+  renderDaily();
 }
 
 function renderMeals(containerId, dayOffset) {
-  const d = new Date(); d.setDate(d.getDate() + dayOffset);
-  const dow = d.getDay();
-  const meals = MEALS[dow] || MEALS[0];
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = '';
-
-  const mealOrder = ['breakfast','lunch','snack','dinner'];
-  const mealLabel = { breakfast:'Breakfast', lunch:'Lunch', snack:'Snack (5:30pm)', dinner:'Dinner' };
-
-  mealOrder.forEach(key => {
-    const m = meals[key];
-    if (!m) return;
-    const card = document.createElement('div');
-    card.className = 'meal-card';
-    let batchHtml = '';
-    if (m.batch) batchHtml = `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
-    if (m.leftover) batchHtml = `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);margin-top:4px;">♻ Leftovers</div>`;
-    card.innerHTML = `
+  const d=new Date(); d.setDate(d.getDate()+dayOffset);
+  const meals=MEALS[d.getDay()]||MEALS[0];
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML='';
+  const order=['breakfast','lunch','snack','dinner'];
+  const labels={breakfast:'Breakfast',lunch:'Lunch',snack:'Snack (5:30pm)',dinner:'Dinner'};
+  order.forEach(key=>{
+    const m=meals[key]; if(!m) return;
+    let extra='';
+    if(m.batch) extra=`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
+    if(m.leftover) extra=`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);margin-top:4px;">♻ Leftovers</div>`;
+    const card=document.createElement('div');
+    card.className='meal-card';
+    card.innerHTML=`
       <div class="meal-card-header">
-        <div class="meal-card-type">${mealLabel[key]}</div>
+        <div class="meal-card-type">${labels[key]}</div>
         <div class="meal-card-protein">${m.protein} protein · ${m.cal} cal</div>
       </div>
       <div class="meal-card-name">${m.name}</div>
-      <div class="meal-card-detail">${m.detail}${batchHtml}</div>
+      <div class="meal-card-detail">${m.detail}${extra}</div>
     `;
     el.appendChild(card);
   });
@@ -1239,223 +1335,280 @@ function renderMeals(containerId, dayOffset) {
 // ══════════════════════════════════════════════
 // 2-DAY VIEW
 // ══════════════════════════════════════════════
-
 function render2Day() {
-  const grid = document.getElementById('twoDayGrid');
-  grid.innerHTML = '';
-
-  [0, 1].forEach(offset => {
-    const dk = todayKey(offset);
-    const dt = dayType(offset);
-    const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
-    const comp = state.completions[dk] || {};
-    const label = offset === 0 ? 'Today' : 'Tomorrow';
-    const dayLabel = dayName(offset);
-
-    const col = document.createElement('div');
-    col.className = 'two-day-col';
-    col.innerHTML = `
-      <div class="two-day-header">
-        ${label}
-        <span class="two-day-subhead">${dayLabel.slice(0,3).toUpperCase()}</span>
-        ${getDayTypeLabel(dt)}
-      </div>
-    `;
-
-    tasks.forEach(task => {
-      const status = comp[task.id] || 'pending';
-      const ws = getWindowStatus(task);
-      let checkCls = '';
-      let checkIcon = '';
-      if (status === 'done') { checkCls = 'done'; checkIcon = '✓'; }
-      else if (status === 'late') { checkCls = 'late'; checkIcon = '✓'; }
-      else if (status === 'missed') { checkCls = 'missed'; checkIcon = '✗'; }
-      else if (offset === 0 && ws === 'open') { checkCls = 'active'; }
-
-      const taskEl = document.createElement('div');
-      taskEl.className = 'two-day-task' + (status === 'done' || status === 'late' ? ' done' : '');
-      if (offset === 0) {
-        taskEl.onclick = () => { handleStatusTap(task.id, dk); render2Day(); };
-        taskEl.style.cursor = 'pointer';
-      }
-      taskEl.innerHTML = `
-        <div class="two-day-check ${checkCls}">${checkIcon}</div>
-        <div class="two-day-task-name">${task.icon} ${task.name}</div>
-        <div class="two-day-time">${fmtTime(task.time)}</div>
-      `;
+  const grid=document.getElementById('twoDayGrid');
+  grid.innerHTML='';
+  [0,1].forEach(offset=>{
+    const dk=todayKey(offset);
+    const dt=dayType(offset);
+    const tasks=TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+    const comp=userCompletions[dk]||{};
+    const label=offset===0?'Today':'Tomorrow';
+    const col=document.createElement('div');
+    col.innerHTML=`<div class="two-day-header">${label}<span class="two-day-subhead">${dayName(offset).slice(0,3).toUpperCase()}</span>${getDayTypeLabel(dt)}</div>`;
+    tasks.forEach(task=>{
+      const status=comp[task.id]||'pending';
+      const ws=getWindowStatus(task);
+      let checkCls='',checkIcon='';
+      if(status==='done'){checkCls='done';checkIcon='✓';}
+      else if(status==='late'){checkCls='late';checkIcon='✓';}
+      else if(status==='missed'){checkCls='missed';checkIcon='✗';}
+      const taskEl=document.createElement('div');
+      taskEl.className='two-day-task'+(status==='done'||status==='late'?' done-t':'');
+      if(offset===0){ taskEl.onclick=()=>{quickComplete(task.id,dk).then(()=>render2Day());}; taskEl.style.cursor='pointer'; }
+      taskEl.innerHTML=`<div class="two-day-check ${checkCls}">${checkIcon}</div><div class="two-day-task-name">${task.icon} ${task.name}</div><div class="two-day-time">${fmtTime(task.time)}</div>`;
       col.appendChild(taskEl);
     });
-
     grid.appendChild(col);
   });
-
-  // Meals
-  const mealsEl = document.getElementById('twoDayMeals');
-  mealsEl.innerHTML = '';
-  [0,1].forEach(offset => {
-    const label = offset === 0 ? 'TODAY' : 'TOMORROW';
-    const lbl = document.createElement('div');
-    lbl.className = 'task-section-label';
-    lbl.textContent = label;
+  const mealsEl=document.getElementById('twoDayMeals');
+  mealsEl.innerHTML='';
+  [0,1].forEach(offset=>{
+    const lbl=document.createElement('div');
+    lbl.className='section-label';
+    lbl.textContent=offset===0?'TODAY':'TOMORROW';
     mealsEl.appendChild(lbl);
-    const wrapper = document.createElement('div');
-    wrapper.id = 'meals2day-' + offset;
-    mealsEl.appendChild(wrapper);
-    renderMeals('meals2day-' + offset, offset);
+    const w=document.createElement('div');
+    w.id='meals2d-'+offset;
+    mealsEl.appendChild(w);
+    renderMeals('meals2d-'+offset,offset);
   });
 }
 
 // ══════════════════════════════════════════════
 // WEEKLY VIEW
 // ══════════════════════════════════════════════
-
 function renderWeekly() {
-  const weekGrid = document.getElementById('weekGrid');
-  weekGrid.innerHTML = '';
+  const weekGrid=document.getElementById('weekGrid');
+  weekGrid.innerHTML='';
+  const today=new Date();
+  const todayDow=today.getDay();
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-todayDow+(todayDow===0?-6:1));
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  let weekDone=0,weekMissed=0;
 
-  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const today = new Date();
-  const todayDow = today.getDay();
-
-  // Get Monday of current week
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - todayDow + (todayDow === 0 ? -6 : 1));
-
-  let weekCompleted = 0;
-  let weekMissed = 0;
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dk = d.toISOString().slice(0,10);
-    const dt = DAY_TYPES[d.getDay()];
-    const { done, missed, total } = getDayCompletion(dk);
-    weekCompleted += done;
-    weekMissed += missed;
-
-    const isToday = dk === todayKey();
-    const isFuture = d > today;
-
-    let numCls = '';
-    if (isToday) numCls = 'today';
-    else if (isFuture) numCls = '';
-    else if (done > 0 && missed === 0) numCls = 'done';
-    else if (done > 0) numCls = 'partial';
-    else numCls = 'rest';
-
-    const dotColor = dt === 'ride' ? 'var(--accent)' : dt === 'lift' ? 'var(--blue)' : 'var(--muted2)';
-
-    const col = document.createElement('div');
-    col.className = 'week-day-col';
-    col.innerHTML = `
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const dk=d.toISOString().slice(0,10);
+    const dt=DAY_TYPES[d.getDay()];
+    const {done,missed,total}=getDayCompletion(dk,userCompletions);
+    weekDone+=done; weekMissed+=missed;
+    const isToday=dk===todayKey();
+    const isFuture=d>today;
+    let numCls=isToday?'today':isFuture?'':(done>0&&missed===0?'done-w':done>0?'partial-w':'');
+    const dotColor=dt==='ride'?'var(--accent)':dt==='lift'?'var(--blue)':'var(--muted2)';
+    const col=document.createElement('div');
+    col.className='week-day-col';
+    col.innerHTML=`
       <div class="week-day-label">${days[d.getDay()]}</div>
       <div class="week-day-num ${numCls}">${d.getDate()}</div>
       <div class="week-type-dot" style="background:${dotColor}"></div>
-      ${!isFuture ? `<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;">${done}/${total}</div>` : ''}
+      ${!isFuture?`<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;">${done}/${total}</div>`:''}
     `;
     weekGrid.appendChild(col);
   }
 
-  document.getElementById('statCompleted').textContent = weekCompleted;
-  document.getElementById('statMissed').textContent = weekMissed;
+  document.getElementById('statDone').textContent=weekDone;
+  document.getElementById('statMissed').textContent=weekMissed;
 
-  // Weekly overview — show today's full plan
-  const overviewEl = document.getElementById('weeklyOverview');
-  overviewEl.innerHTML = '';
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dk = d.toISOString().slice(0,10);
-    const dt = DAY_TYPES[d.getDay()];
-    const comp = state.completions[dk] || {};
-    const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
-    const isToday = dk === todayKey();
-    const { done, total } = getDayCompletion(dk);
-
-    const dayBlock = document.createElement('div');
-    dayBlock.style.margin = '0 16px 12px';
-    dayBlock.style.background = 'var(--card)';
-    dayBlock.style.border = `1px solid ${isToday ? 'var(--accent)' : 'var(--border)'}`;
-    dayBlock.style.overflow = 'hidden';
-
-    const dtColor = dt === 'ride' ? 'var(--accent)' : dt === 'lift' ? 'var(--blue)' : 'var(--muted)';
-    const dtLabel = dt.toUpperCase();
-
-    dayBlock.innerHTML = `
+  const overviewEl=document.getElementById('weeklyOverview');
+  overviewEl.innerHTML='';
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const dk=d.toISOString().slice(0,10);
+    const dt=DAY_TYPES[d.getDay()];
+    const comp=userCompletions[dk]||{};
+    const tasks=TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+    const isToday=dk===todayKey();
+    const {done,total}=getDayCompletion(dk,userCompletions);
+    const dtColor=dt==='ride'?'var(--accent)':dt==='lift'?'var(--blue)':'var(--muted)';
+    const block=document.createElement('div');
+    block.style.cssText='margin:0 16px 10px;background:var(--card);border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';overflow:hidden;';
+    block.innerHTML=`
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <div>
           <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:${isToday?'var(--accent)':'var(--text)'}">${days[d.getDay()]} ${d.getDate()}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:9px;color:${dtColor};margin-left:8px;letter-spacing:1px;">${dtLabel}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:${dtColor};margin-left:8px;letter-spacing:1px;">${dt.toUpperCase()}</span>
         </div>
         <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${done}/${total} ▾</span>
       </div>
       <div style="display:${isToday?'block':'none'}">
-        ${tasks.map(t => {
-          const s = comp[t.id] || 'pending';
-          const ic = s==='done'?'✓':s==='late'?'✓':s==='missed'?'✗':'○';
-          const c = s==='done'?'var(--accent)':s==='late'?'var(--orange)':s==='missed'?'var(--red)':'var(--muted)';
+        ${tasks.map(t=>{
+          const s=comp[t.id]||'pending';
+          const ic=s==='done'||s==='late'?'✓':s==='missed'?'✗':'○';
+          const c=s==='done'?'var(--accent)':s==='late'?'var(--orange)':s==='missed'?'var(--red)':'var(--muted2)';
           return `<div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
             <span style="color:${c};font-size:12px;width:14px">${ic}</span>
-            <span style="font-size:12px;color:var(--text)">${t.icon} ${t.name}</span>
+            <span style="font-size:12px;">${t.icon} ${t.name}</span>
             <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${fmtTime(t.time)}</span>
           </div>`;
         }).join('')}
       </div>
     `;
-    overviewEl.appendChild(dayBlock);
+    overviewEl.appendChild(block);
   }
+}
+
+// ══════════════════════════════════════════════
+// TOGETHER VIEW
+// ══════════════════════════════════════════════
+async function renderTogether() {
+  // Load partner data fresh
+  otherUserCompletions = await loadOtherUserData();
+
+  const dk = todayKey();
+  const dt = dayType();
+  const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
+
+  // Steve streak
+  const steveIsSteve = currentProfile?.name?.toLowerCase()==='steve';
+  const myComp = userCompletions;
+  const partnerComp = otherUserCompletions;
+
+  const steveComp = steveIsSteve ? myComp : partnerComp;
+  const bekkyComp = steveIsSteve ? partnerComp : myComp;
+
+  const steveStreak = calcStreak(steveComp);
+  const bekkyStreak = calcStreak(bekkyComp);
+
+  document.getElementById('vsStreakSteve').textContent = steveStreak;
+  document.getElementById('vsStreakBekky').textContent = bekkyStreak;
+
+  // Today pct
+  const steveDone = tasks.filter(t=>(steveComp[dk]||{})[t.id]==='done'||(steveComp[dk]||{})[t.id]==='late').length;
+  const bekkyDone = tasks.filter(t=>(bekkyComp[dk]||{})[t.id]==='done'||(bekkyComp[dk]||{})[t.id]==='late').length;
+  const stevePct = Math.round((steveDone/tasks.length)*100);
+  const bekkyPct = Math.round((bekkyDone/tasks.length)*100);
+
+  document.getElementById('couplePctSteve').textContent = stevePct+'%';
+  document.getElementById('couplePctBekky').textContent = bekkyPct+'%';
+  document.getElementById('coupleTasksSteve').textContent = `${steveDone}/${tasks.length} tasks`;
+  document.getElementById('coupleTasksBekky').textContent = `${bekkyDone}/${tasks.length} tasks`;
+
+  const sOff = 213.6-(stevePct/100)*213.6;
+  const bOff = 213.6-(bekkyPct/100)*213.6;
+  document.getElementById('coupleRingSteve').style.strokeDashoffset = sOff;
+  document.getElementById('coupleRingBekky').style.strokeDashoffset = bOff;
+
+  // Metrics history
+  await loadMetricsHistory();
+}
+
+// ══════════════════════════════════════════════
+// METRICS
+// ══════════════════════════════════════════════
+async function logMetrics() {
+  const weight = document.getElementById('metricWeight').value;
+  const ftp = document.getElementById('metricFTP').value;
+  const bf = document.getElementById('metricBF').value;
+  const notes = document.getElementById('metricNotes').value;
+
+  if (!weight && !ftp && !bf) { showToast('Enter at least one metric','orange'); return; }
+
+  const { error } = await sb.from('metrics').insert({
+    user_id: currentUser.id,
+    date: todayKey(),
+    weight_lbs: weight||null,
+    ftp_watts: ftp||null,
+    body_fat_pct: bf||null,
+    notes: notes||null
+  });
+
+  if (error) { showToast('Error saving metrics','red'); return; }
+
+  showToast('✓ Metrics logged!');
+  document.getElementById('metricWeight').value='';
+  document.getElementById('metricFTP').value='';
+  document.getElementById('metricBF').value='';
+  document.getElementById('metricNotes').value='';
+  await loadMetricsHistory();
+}
+
+async function loadMetricsHistory() {
+  const { data } = await sb.from('metrics')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('date', { ascending:false })
+    .limit(10);
+
+  const el = document.getElementById('metricsHistory');
+  if (!data||data.length===0) {
+    el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px;">No entries yet</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(row=>`
+    <div class="metrics-entry">
+      <div class="metrics-entry-date">${row.date}</div>
+      <div class="metrics-entry-vals">
+        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--accent)">${row.weight_lbs}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
+        ${row.ftp_watts?`<div><div class="metrics-entry-val" style="color:var(--green)">${row.ftp_watts}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">WATTS</div></div>`:''}
+        ${row.body_fat_pct?`<div><div class="metrics-entry-val" style="color:var(--blue)">${row.body_fat_pct}</div><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">BF%</div></div>`:''}
+      </div>
+    </div>
+  `).join('');
 }
 
 // ══════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════
-
 function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('view-' + tab).classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-
-  if (tab === 'daily') renderDaily();
-  else if (tab === '2day') render2Day();
-  else if (tab === 'weekly') renderWeekly();
-}
-
-// ══════════════════════════════════════════════
-// AUTO-MARK MISSED + CLOCK
-// ══════════════════════════════════════════════
-
-function autoMarkMissed() {
-  const dk = todayKey();
-  const dt = dayType();
-  const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
-  const now = nowMinutes();
-  tasks.forEach(task => {
-    const status = taskStatus(task.id, dk);
-    const closeTime = task.time + task.window;
-    if (status === 'pending' && now > closeTime) {
-      setTaskStatus(task.id, 'missed', dk);
-    }
-  });
-}
-
-function startClock() {
-  if (clockInterval) clearInterval(clockInterval);
-  clockInterval = setInterval(() => {
-    autoMarkMissed();
-    if (currentTab === 'daily') renderDaily();
-  }, 60000); // every minute
+  currentTab=tab;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='daily') renderDaily();
+  else if(tab==='2day') render2Day();
+  else if(tab==='weekly') renderWeekly();
+  else if(tab==='together') renderTogether();
 }
 
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+async function initApp(user) {
+  currentUser = user;
 
-autoMarkMissed();
-renderDaily();
-startClock();
+  // Load profile
+  const { data:profile } = await sb.from('profiles').select('*').eq('id',user.id).single();
+  currentProfile = profile;
+
+  // Load completions
+  userCompletions = await loadUserData(user.id);
+
+  // Auto-mark missed
+  await autoMarkMissed();
+
+  // Show app
+  document.getElementById('loading').style.display='none';
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+
+  renderDaily();
+
+  // Clock — auto-mark missed every minute
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval = setInterval(async()=>{
+    await autoMarkMissed();
+    if(currentTab==='daily') renderDaily();
+  }, 60000);
+}
+
+// Auth state listener
+sb.auth.onAuthStateChange(async(event, session)=>{
+  if(session?.user){
+    if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
+      await initApp(session.user);
+    }
+  } else {
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='none';
+    document.getElementById('authScreen').style.display='flex';
+    if(clockInterval) clearInterval(clockInterval);
+  }
+});
 </script>
 </body>
 </html>
