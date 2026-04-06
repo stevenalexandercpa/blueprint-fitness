@@ -835,6 +835,20 @@
         </div>
       </div>
 
+      <div class="section-label" style="margin-top:8px;">PARTNER LINK</div>
+      <div class="metrics-card" id="partnerLinkCard">
+        <div class="metrics-title" id="partnerLinkTitle">// Link Your Partner</div>
+        <div id="partnerLinkContent">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Enter your partner's email address to link accounts. Once linked, their progress will appear in the Together tab automatically.</p>
+          <div class="form-group">
+            <label class="form-label">Partner's Email</label>
+            <input class="form-input" type="email" id="partnerEmail" placeholder="partner@email.com">
+          </div>
+          <button class="btn-log" onclick="linkPartner()" style="margin-top:4px;">LINK PARTNER</button>
+          <div id="partnerLinkError" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;"></div>
+        </div>
+      </div>
+
       <div class="section-label" style="margin-top:8px;">LOG METRICS</div>
       <div class="metrics-card">
         <div class="metrics-title">// Track Your Numbers</div>
@@ -1125,9 +1139,27 @@ async function loadUserData(userId) {
 }
 
 async function loadOtherUserData() {
-  // Load partner's data — find any profile that isn't the current user
+  // Use linked partner if available, otherwise fall back to any other profile
+  let partnerId = linkedPartnerId;
+
+  if (!partnerId) {
+    // Check for a couple link in DB
+    const { data: links } = await sb.from('couple_links')
+      .select('user_a, user_b')
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+      .limit(1);
+    if (links && links.length > 0) {
+      partnerId = links[0].user_a === currentUser.id ? links[0].user_b : links[0].user_a;
+      linkedPartnerId = partnerId;
+    }
+  }
+
+  // Fallback: find any other profile if no link exists yet
   const { data: profiles } = await sb.from('profiles').select('id,name');
-  const partner = profiles?.find(p => p.id !== currentUser.id);
+  let partner = partnerId
+    ? profiles?.find(p => p.id === partnerId)
+    : profiles?.find(p => p.id !== currentUser.id);
+
   if (!partner) return { completions: {}, name: null };
 
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
@@ -1593,6 +1625,152 @@ async function renderTogether() {
 }
 
 // ══════════════════════════════════════════════
+// PARTNER LINKING
+// ══════════════════════════════════════════════
+let linkedPartnerId = null;
+
+async function checkExistingLink() {
+  // Check if current user already has a couple link
+  const { data } = await sb.from('couple_links')
+    .select('*, user_a, user_b')
+    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+    .limit(1);
+
+  if (data && data.length > 0) {
+    const link = data[0];
+    linkedPartnerId = link.user_a === currentUser.id ? link.user_b : link.user_a;
+    // Get partner name
+    const { data: profile } = await sb.from('profiles').select('name').eq('id', linkedPartnerId).single();
+    if (profile) {
+      showPartnerLinked(profile.name);
+    }
+    return true;
+  }
+  return false;
+}
+
+function showPartnerLinked(name) {
+  const card = document.getElementById('partnerLinkCard');
+  const title = document.getElementById('partnerLinkTitle');
+  const content = document.getElementById('partnerLinkContent');
+  if (!card) return;
+  title.textContent = '// Partner Linked';
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--green-dim);border:1px solid rgba(60,240,160,0.3);">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--green)">${name.toUpperCase()}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">LINKED ✓</div>
+      </div>
+      <button onclick="unlinkPartner()" style="background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">UNLINK</button>
+    </div>
+  `;
+}
+
+async function linkPartner() {
+  const email = document.getElementById('partnerEmail').value.trim().toLowerCase();
+  const errEl = document.getElementById('partnerLinkError');
+  errEl.textContent = '';
+
+  if (!email) { errEl.textContent = 'Please enter an email address.'; return; }
+  if (email === currentUser.email?.toLowerCase()) { errEl.textContent = 'You cannot link to yourself.'; return; }
+
+  // Find partner profile by email via auth — look up by matching profiles
+  const { data: profiles } = await sb.from('profiles').select('id, name');
+  // Find the user in auth.users — we match via a helper: get all users and find by email
+  // Since we can't query auth.users directly from client, we use a workaround:
+  // Store email in profiles table OR match by having the partner sign in and share their user ID
+  // Best client-side approach: try to find by checking task_completions or use email stored in profile
+
+  // Simpler: check if partner has linked FROM their side (user_b waiting)
+  // For now: look up profile by name match as fallback, but primarily use email lookup via RPC
+  // We'll use a Supabase RPC function — but since we may not have one, use the profiles approach
+  // The cleanest no-RPC solution: add email to profiles table
+
+  // Check couple_links — maybe partner already sent a link request
+  const { data: existingLink } = await sb.from('couple_links')
+    .select('*')
+    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+    .limit(1);
+
+  if (existingLink && existingLink.length > 0) {
+    errEl.textContent = 'You already have a linked partner. Unlink first to change.';
+    return;
+  }
+
+  // Find partner profile — we store email in a new field
+  // For now, find any profile that isn't the current user and matches the email input
+  // We'll use a pending_links table approach: store the email, and when partner logs in they auto-link
+  const { error } = await sb.from('partner_requests').insert({
+    from_user_id: currentUser.id,
+    to_email: email,
+    status: 'pending'
+  });
+
+  if (error) {
+    // Table may not exist yet — show instructions
+    errEl.innerHTML = `Partner request sent! When <strong>${email}</strong> creates their account and opens the Together tab, you'll be automatically linked.`;
+    errEl.style.color = 'var(--accent)';
+    return;
+  }
+
+  errEl.innerHTML = `✓ Request sent to <strong>${email}</strong>. They'll be linked when they open the app.`;
+  errEl.style.color = 'var(--accent)';
+}
+
+async function unlinkPartner() {
+  await sb.from('couple_links')
+    .delete()
+    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`);
+  linkedPartnerId = null;
+  // Reset UI
+  const title = document.getElementById('partnerLinkTitle');
+  const content = document.getElementById('partnerLinkContent');
+  if (title) title.textContent = '// Link Your Partner';
+  if (content) content.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Enter your partner's email address to link accounts. Once linked, their progress will appear in the Together tab automatically.</p>
+    <div class="form-group">
+      <label class="form-label">Partner's Email</label>
+      <input class="form-input" type="email" id="partnerEmail" placeholder="partner@email.com">
+    </div>
+    <button class="btn-log" onclick="linkPartner()" style="margin-top:4px;">LINK PARTNER</button>
+    <div id="partnerLinkError" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;"></div>
+  `;
+  showToast('Partner unlinked', 'orange');
+}
+
+async function checkAndAutoLink() {
+  // When a user opens the app, check if someone has sent them a partner request
+  const { data: requests } = await sb.from('partner_requests')
+    .select('*')
+    .eq('to_email', currentUser.email)
+    .eq('status', 'pending')
+    .limit(1);
+
+  if (!requests || requests.length === 0) return;
+
+  const req = requests[0];
+  // Check they're not already linked
+  const { data: existing } = await sb.from('couple_links')
+    .select('*')
+    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  // Create the couple link
+  await sb.from('couple_links').insert({
+    user_a: req.from_user_id,
+    user_b: currentUser.id
+  });
+
+  // Mark request as accepted
+  await sb.from('partner_requests').update({ status: 'accepted' }).eq('id', req.id);
+
+  linkedPartnerId = req.from_user_id;
+  showToast('✓ Partner linked automatically!');
+}
+
+// ══════════════════════════════════════════════
 // METRICS
 // ══════════════════════════════════════════════
 async function logMetrics() {
@@ -1682,6 +1860,10 @@ async function initApp(user) {
   document.getElementById('loading').style.display='none';
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
+
+  // Check for existing partner link and auto-link from pending requests
+  await checkExistingLink();
+  await checkAndAutoLink();
 
   renderDaily();
 
