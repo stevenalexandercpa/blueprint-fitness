@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steve's Performance Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --bg2: #111318;
+    --bg3: #181c23;
+    --card: #1a1f28;
+    --border: #252c38;
+    --accent: #e8f04a;
+    --accent2: #4af0a0;
+    --accent3: #4ab4f0;
+    --accent4: #f07a4a;
+    --text: #e8eaf0;
+    --muted: #6b7585;
+    --subtle: #2e3545;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    padding: 80px 60px 60px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,240,74,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: 'BLUEPRINT';
+    position: absolute;
+    bottom: -20px; right: 40px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 160px;
+    color: rgba(255,255,255,0.02);
+    letter-spacing: 8px;
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #0a0c0f;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 3px;
+    line-height: 1;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 16px;
+    font-weight: 300;
+    max-width: 500px;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .hero-stat { display: flex; flex-direction: column; gap: 4px; }
+  .hero-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* SECTIONS */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+  .section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* CARDS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .card-unit {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .green { color: var(--accent2); }
+  .yellow { color: var(--accent); }
+  .blue { color: var(--accent3); }
+  .orange { color: var(--accent4); }
+  .red { color: #f04a4a; }
+
+  /* CURRENT vs GOAL VISUAL */
+  .transform-visual {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 30px;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+
+  .state-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 36px;
+  }
+
+  .state-block.goal { border-color: var(--accent); }
+
+  .state-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .state-label.current { color: var(--muted); }
+  .state-label.goal-lbl { color: var(--accent); }
+
+  .state-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .state-row:last-child { border-bottom: none; }
+
+  .state-metric { font-size: 13px; color: var(--muted); }
+  .state-val { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; }
+
+  .arrow-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .arrow-line {
+    width: 60px;
+    height: 2px;
+    background: var(--accent);
+    position: relative;
+  }
+
+  .arrow-line::after {
+    content: '▶';
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  .arrow-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  /* BODY COMPOSITION BAR */
+  .body-comp {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-top: 20px;
+  }
+
+  .comp-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .comp-bar-wrap {
+    margin-bottom: 20px;
+  }
+
+  .comp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  .comp-bar-name { color: var(--muted); }
+  .comp-bar-val { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  .comp-bar {
+    height: 8px;
+    background: var(--subtle);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .comp-bar-fill {
+    height: 100%;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+
+  .comp-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--accent3));
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 36px;
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -34px; top: 28px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+  }
+
+  .timeline-item.phase2::before { border-color: var(--accent2); }
+  .timeline-item.phase3::before { border-color: var(--accent3); }
+  .timeline-item.phase4::before { border-color: var(--accent4); }
+
+  .tl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .tl-phase {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .tl-phase.p2 { color: var(--accent2); }
+  .tl-phase.p3 { color: var(--accent3); }
+  .tl-phase.p4 { color: var(--accent4); }
+
+  .tl-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+  }
+
+  .tl-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .tl-goals {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .tl-tag {
+    background: var(--subtle);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 4px 10px;
+  }
+
+  .tl-targets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tl-target-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .tl-target-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+
+  /* MEAL PLAN */
+  .meal-week {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .meal-day {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-day:last-child { border-bottom: none; }
+
+  .meal-day-label {
+    background: var(--subtle);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .meal-day-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .meal-day-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .meal-cell {
+    padding: 16px;
+    border-right: 1px solid var(--border);
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .meal-cell:last-child { border-right: none; }
+
+  .meal-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .meal-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .meal-macro {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: auto;
+  }
+
+  .meal-leftovers {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent2);
+    margin-top: 4px;
+  }
+
+  /* MEAL HEADER */
+  .meal-header {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr 1fr 1fr;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .meal-header-cell {
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-right: 1px solid var(--border);
+  }
+  .meal-header-cell:last-child { border-right: none; }
+
+  /* DAILY SCHEDULE */
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0;
+  }
+
+  .sched-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    padding: 16px 20px 16px 0;
+    text-align: right;
+    border-right: 2px solid var(--border);
+    position: relative;
+  }
+
+  .sched-time::after {
+    content: '';
+    position: absolute;
+    right: -5px; top: 22px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+  }
+
+  .sched-content {
+    padding: 12px 0 12px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .sched-block-label {
+    background: var(--subtle);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 3px 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .sched-block-label.train { background: rgba(232,240,74,0.1); color: var(--accent); border: 1px solid rgba(232,240,74,0.3); }
+  .sched-block-label.eat { background: rgba(74,240,160,0.1); color: var(--accent2); border: 1px solid rgba(74,240,160,0.3); }
+  .sched-block-label.sleep { background: rgba(74,180,240,0.1); color: var(--accent3); border: 1px solid rgba(74,180,240,0.3); }
+  .sched-block-label.supp { background: rgba(240,122,74,0.1); color: var(--accent4); border: 1px solid rgba(240,122,74,0.3); }
+
+  .sched-text {
+    font-size: 14px;
+    color: var(--text);
+    padding-top: 2px;
+  }
+
+  .sched-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* SUPPLEMENT & NUTRITION BLOCKS */
+  .highlight-box {
+    background: rgba(232,240,74,0.05);
+    border: 1px solid rgba(232,240,74,0.2);
+    padding: 24px;
+    margin-top: 20px;
+  }
+
+  .highlight-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .progress-wrap { margin-bottom: 16px; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--subtle);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  /* W/KG VISUAL */
+  .wkg-viz {
+    position: relative;
+    padding: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .wkg-scale {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 100px;
+    margin-bottom: 12px;
+  }
+
+  .wkg-bar {
+    flex: 1;
+    background: var(--subtle);
+    transition: height 0.8s;
+    position: relative;
+  }
+
+  .wkg-bar.active { background: var(--accent); }
+  .wkg-bar.target { background: rgba(232,240,74,0.3); border: 1px dashed var(--accent); }
+
+  .wkg-labels {
+    display: flex;
+    gap: 3px;
+  }
+
+  .wkg-label {
+    flex: 1;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* FOOTER */
+  .footer {
+    padding: 40px 60px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .footer-accent {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  /* RECIPE CARD */
+  .recipe-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+  }
+
+  .recipe-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .recipe-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .recipe-macros {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--subtle);
+  }
+
+  .recipe-macro { text-align: center; flex: 1; }
+  .recipe-macro-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+  .recipe-macro-lbl { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+
+  .recipe-ingr { font-size: 13px; color: var(--muted); line-height: 1.8; }
+
+  .tag-leftovers {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--accent2);
+    color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 40px 24px; }
+    .hero h1 { font-size: 48px; }
+    .container { padding: 0 24px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .transform-visual { grid-template-columns: 1fr; }
+    .arrow-block { display: none; }
+    .meal-day { grid-template-columns: 1fr; }
+    .meal-header { display: none; }
+    .schedule-grid { grid-template-columns: 70px 1fr; }
+    .tl-targets { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Performance Blueprint · April 2026</div>
+  <h1>Steve's <span>Fitness</span><br>Blueprint</h1>
+  <p class="hero-sub">A comprehensive performance and nutrition plan targeting longevity, body recomposition, and peak cycling performance.</p>
+  <div class="hero-meta">
+    <div class="hero-stat">
+      <span class="hero-stat-val">31</span>
+      <span class="hero-stat-label">Age</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-val">189W</span>
+      <span class="hero-stat-label">FTP</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-val">2.25</span>
+      <span class="hero-stat-label">W/KG</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-val">25.2%</span>
+      <span class="hero-stat-label">Body Fat</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1: CURRENT VS GOAL -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <span class="section-title">Current vs Target State</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="transform-visual">
+      <div class="state-block">
+        <div class="state-label current">// Current State — April 2026</div>
+        <div class="state-row">
+          <span class="state-metric">Weight</span>
+          <span class="state-val red">185 lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Body Fat</span>
+          <span class="state-val red">25.2%</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Fat Mass</span>
+          <span class="state-val red">46 lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Lean Mass</span>
+          <span class="state-val yellow">136.8 lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">FTP</span>
+          <span class="state-val yellow">189W</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">W/kg</span>
+          <span class="state-val yellow">2.25</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Visceral Fat</span>
+          <span class="state-val orange">12 (High)</span>
+        </div>
+      </div>
+
+      <div class="arrow-block">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">12–18<br>months</div>
+      </div>
+
+      <div class="state-block goal">
+        <div class="state-label goal-lbl">// Target State — 2027</div>
+        <div class="state-row">
+          <span class="state-metric">Weight</span>
+          <span class="state-val green">165 lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Body Fat</span>
+          <span class="state-val green">~17%</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Fat Mass</span>
+          <span class="state-val green">~28 lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Lean Mass</span>
+          <span class="state-val green">137+ lbs</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">FTP</span>
+          <span class="state-val green">220–250W</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">W/kg</span>
+          <span class="state-val green">2.9–3.3</span>
+        </div>
+        <div class="state-row">
+          <span class="state-metric">Visceral Fat</span>
+          <span class="state-val green">&lt;8 (Normal)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODY COMP BARS -->
+    <div class="body-comp">
+      <div class="comp-title">// Current Body Composition Breakdown (185 lbs)</div>
+
+      <div class="comp-bar-wrap">
+        <div class="comp-bar-label">
+          <span class="comp-bar-name">Body Fat</span>
+          <span class="comp-bar-val red">46 lbs · 25.2%</span>
+        </div>
+        <div class="comp-bar">
+          <div class="comp-bar-fill" style="width: 25.2%; background: #f04a4a;"></div>
+        </div>
+      </div>
+
+      <div class="comp-bar-wrap">
+        <div class="comp-bar-label">
+          <span class="comp-bar-name">Skeletal Muscle</span>
+          <span class="comp-bar-val blue">88 lbs · 48.2% <span style="color:var(--accent4)">(Low — priority)</span></span>
+        </div>
+        <div class="comp-bar">
+          <div class="comp-bar-fill" style="width: 48.2%; background: var(--accent3);"></div>
+        </div>
+      </div>
+
+      <div class="comp-bar-wrap">
+        <div class="comp-bar-label">
+          <span class="comp-bar-name">Muscle Mass</span>
+          <span class="comp-bar-val green">130 lbs · 71.1%</span>
+        </div>
+        <div class="comp-bar">
+          <div class="comp-bar-fill" style="width: 71.1%; background: var(--accent2);"></div>
+        </div>
+      </div>
+
+      <div class="comp-bar-wrap">
+        <div class="comp-bar-label">
+          <span class="comp-bar-name">Bone Mass</span>
+          <span class="comp-bar-val" style="color:var(--muted)">6.8 lbs · 3.7%</span>
+        </div>
+        <div class="comp-bar">
+          <div class="comp-bar-fill" style="width: 3.7%; background: var(--muted);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY FLAGS -->
+    <div class="grid-3" style="margin-top: 20px;">
+      <div class="card">
+        <div class="card-label">Visceral Fat Score</div>
+        <div class="card-val orange">12</div>
+        <div class="card-desc">Slightly high. Direct cardiovascular risk marker. Responds strongly to Zone 2 cardio + calorie deficit. Target: below 8 within 6 months.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Skeletal Muscle Rating</div>
+        <div class="card-val red">Low</div>
+        <div class="card-desc">Despite 130 lbs muscle mass, functional skeletal muscle is low for your frame. PPL routine is the right call — protect this during fat loss phase.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">W/kg Milestone</div>
+        <div class="card-val yellow">2.52</div>
+        <div class="card-desc">Your W/kg at 165 lbs with current FTP unchanged. Weight loss alone gets you here. FTP gains are a bonus on top.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: TIMELINE -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <span class="section-title">Achievement Timeline</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="tl-header">
+          <div>
+            <div class="tl-phase">Phase 0 · NOW</div>
+            <div class="tl-title">Complete the Base</div>
+          </div>
+          <div class="tl-date">Weeks 4–8<br>Apr–May 2026</div>
+        </div>
+        <p style="font-size:13px; color:var(--muted);">Finish the 8-week Boost Your Base program as prescribed. Layer in nutrition habits and sleep protocol. Take FTP test at week 8.</p>
+        <div class="tl-goals">
+          <span class="tl-tag">Complete PPL 3x/week</span>
+          <span class="tl-tag">Complete 3 rides/week</span>
+          <span class="tl-tag">Hit 180g protein/day</span>
+          <span class="tl-tag">Kitchen closes 8pm</span>
+          <span class="tl-tag">FTP retest at week 8</span>
+        </div>
+        <div class="tl-targets">
+          <div><div class="tl-target-label">Weight Target</div><div class="tl-target-val yellow">~183 lbs</div></div>
+          <div><div class="tl-target-label">FTP Target</div><div class="tl-target-val yellow">189W+</div></div>
+          <div><div class="tl-target-label">Body Fat</div><div class="tl-target-val yellow">~24%</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item phase2">
+        <div class="tl-header">
+          <div>
+            <div class="tl-phase p2">Phase 1 · Build the Engine</div>
+            <div class="tl-title">Base + Recomposition</div>
+          </div>
+          <div class="tl-date">8 Weeks<br>Jun–Jul 2026</div>
+        </div>
+        <p style="font-size:13px; color:var(--muted);">High Zone 2 volume (3 rides/week), PPL continues, nutrition deficit locked in at 300–400 cal/day. Focus is fat loss while maintaining lean mass.</p>
+        <div class="tl-goals">
+          <span class="tl-tag">Zone 2 dominant riding</span>
+          <span class="tl-tag">300–400 cal deficit</span>
+          <span class="tl-tag">0.5–0.75 lbs/week loss</span>
+          <span class="tl-tag">Magnesium + sleep protocol</span>
+        </div>
+        <div class="tl-targets">
+          <div><div class="tl-target-label">Weight Target</div><div class="tl-target-val green">~177 lbs</div></div>
+          <div><div class="tl-target-label">FTP Target</div><div class="tl-target-val green">~195W</div></div>
+          <div><div class="tl-target-label">Body Fat</div><div class="tl-target-val green">~22%</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item phase3">
+        <div class="tl-header">
+          <div>
+            <div class="tl-phase p3">Phase 2 · Power Development</div>
+            <div class="tl-title">VO₂ Max + FTP Build</div>
+          </div>
+          <div class="tl-date">8 Weeks<br>Aug–Sep 2026</div>
+        </div>
+        <p style="font-size:13px; color:var(--muted);">Introduce VO₂ max intervals (Zones 5–6) once per week alongside Power Zone Endurance rides. This is where FTP begins climbing meaningfully.</p>
+        <div class="tl-goals">
+          <span class="tl-tag">1x VO₂ max session/week</span>
+          <span class="tl-tag">Power Zone Endurance 2x</span>
+          <span class="tl-tag">Maintain deficit or diet break</span>
+          <span class="tl-tag">FTP retest at end</span>
+        </div>
+        <div class="tl-targets">
+          <div><div class="tl-target-label">Weight Target</div><div class="tl-target-val blue">~172 lbs</div></div>
+          <div><div class="tl-target-label">FTP Target</div><div class="tl-target-val blue">~210W</div></div>
+          <div><div class="tl-target-label">W/kg</div><div class="tl-target-val blue">~2.70</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item phase4">
+        <div class="tl-header">
+          <div>
+            <div class="tl-phase p4">Phase 3 · Peak & Sustain</div>
+            <div class="tl-title">Upper Percentile Performance</div>
+          </div>
+          <div class="tl-date">Ongoing<br>Oct 2026 → 2027</div>
+        </div>
+        <p style="font-size:13px; color:var(--muted);">Repeat build cycles, maintain weight at 165 lbs, continue increasing FTP. At 165 lbs and 220–250W FTP you're solidly upper percentile for a 31yo male — and in longevity-optimized territory.</p>
+        <div class="tl-goals">
+          <span class="tl-tag">Goal weight achieved</span>
+          <span class="tl-tag">Maintenance calories</span>
+          <span class="tl-tag">Periodized training blocks</span>
+          <span class="tl-tag">Annual DEXA scan</span>
+        </div>
+        <div class="tl-targets">
+          <div><div class="tl-target-label">Weight Target</div><div class="tl-target-val orange">165 lbs</div></div>
+          <div><div class="tl-target-label">FTP Target</div><div class="tl-target-val orange">220–250W</div></div>
+          <div><div class="tl-target-label">W/kg</div><div class="tl-target-val orange">2.9–3.3</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: DAILY SCHEDULE -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <span class="section-title">Daily Schedule</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="grid-2" style="gap: 40px;">
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--accent); margin-bottom:20px; text-transform:uppercase;">// Training Day (Lift or Ride)</div>
+        <div class="schedule-grid">
+          <div class="sched-time">7:00</div>
+          <div class="sched-content">
+            <span class="sched-block-label">Wake</span>
+            <div><div class="sched-text">Rise + 500ml water</div><div class="sched-sub">Daylight exposure within 30 min — anchors circadian rhythm</div></div>
+          </div>
+          <div class="sched-time">7:15</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Breakfast</span>
+            <div><div class="sched-text">4 eggs + turkey bacon + Greek yogurt</div><div class="sched-sub">~45g protein · High protein, moderate carbs</div></div>
+          </div>
+          <div class="sched-time">7:45</div>
+          <div class="sched-content">
+            <span class="sched-block-label">Deep Work</span>
+            <div><div class="sched-text">Peak cognitive window</div><div class="sched-sub">Protect this block — best focus hours of the day</div></div>
+          </div>
+          <div class="sched-time">10:45</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Pre-Workout</span>
+            <div><div class="sched-text">Banana or rice cakes + electrolytes</div><div class="sched-sub">30–50g fast carbs · 45 min before training</div></div>
+          </div>
+          <div class="sched-time">11:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label train">Train</span>
+            <div><div class="sched-text">Ride or Lift · 45–60 min</div><div class="sched-sub">Core training block · Performance peak window</div></div>
+          </div>
+          <div class="sched-time">12:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Post-WOD</span>
+            <div><div class="sched-text">Protein shake immediately</div><div class="sched-sub">40g protein + 30–50g carbs within 45 min</div></div>
+          </div>
+          <div class="sched-time">1:00</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Lunch</span>
+            <div><div class="sched-text">Largest meal of the day</div><div class="sched-sub">~50g protein · Protein + carbs + veg</div></div>
+          </div>
+          <div class="sched-time">1:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label">Work</span>
+            <div><div class="sched-text">Afternoon deep work</div></div>
+          </div>
+          <div class="sched-time">5:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Snack</span>
+            <div><div class="sched-text">Pre-approved snack only</div><div class="sched-sub">~25–35g protein · Intentional, not spontaneous</div></div>
+          </div>
+          <div class="sched-time">6:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label eat">Dinner</span>
+            <div><div class="sched-text">Protein + veg · lighter carbs</div><div class="sched-sub">~40–50g protein · For two</div></div>
+          </div>
+          <div class="sched-time">8:00</div>
+          <div class="sched-content">
+            <span class="sched-block-label">🚫 Kitchen</span>
+            <div><div class="sched-text">Kitchen closes — hard stop</div><div class="sched-sub">Brush teeth if it helps</div></div>
+          </div>
+          <div class="sched-time">9:30</div>
+          <div class="sched-content">
+            <span class="sched-block-label supp">Supps</span>
+            <div><div class="sched-text">Magnesium Glycinate 300–400mg</div><div class="sched-sub">CanPrev or Thorne · 30–60 min before bed</div></div>
+          </div>
+          <div class="sched-time">10:00</div>
+          <div class="sched-content">
+            <span class="sched-block-label sleep">Sleep</span>
+            <div><div class="sched-text">Lights out · 7.5–8.5 hrs target</div><div class="sched-sub">Room 65–68°F · No screens · Same time daily</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:20px; text-transform:uppercase;">// Nutrition Targets by Day Type</div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-label">Ride Day</div>
+          <div class="grid-4" style="gap:8px; margin-top:8px;">
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="yellow">2,400</div><div style="font-size:11px;color:var(--muted);">Calories</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="green">180g</div><div style="font-size:11px;color:var(--muted);">Protein</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="blue">High</div><div style="font-size:11px;color:var(--muted);">Carbs</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="orange">Fill</div><div style="font-size:11px;color:var(--muted);">Fat</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-label">Lift Day</div>
+          <div class="grid-4" style="gap:8px; margin-top:8px;">
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="yellow">2,200</div><div style="font-size:11px;color:var(--muted);">Calories</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="green">180g</div><div style="font-size:11px;color:var(--muted);">Protein</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="blue">Mod</div><div style="font-size:11px;color:var(--muted);">Carbs</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="orange">Fill</div><div style="font-size:11px;color:var(--muted);">Fat</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-label">Rest Day</div>
+          <div class="grid-4" style="gap:8px; margin-top:8px;">
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="yellow">2,000</div><div style="font-size:11px;color:var(--muted);">Calories</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="green">180g</div><div style="font-size:11px;color:var(--muted);">Protein</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="blue">Low</div><div style="font-size:11px;color:var(--muted);">Carbs</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;" class="orange">Fill</div><div style="font-size:11px;color:var(--muted);">Fat</div></div>
+          </div>
+        </div>
+
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:16px; text-transform:uppercase;">// Daily Protein Distribution</div>
+
+        <div class="progress-wrap">
+          <div class="progress-header"><span style="color:var(--muted)">Breakfast</span><span class="yellow">45g</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-header"><span style="color:var(--muted)">Post-Workout Shake</span><span class="yellow">40g</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:22%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-header"><span style="color:var(--muted)">Lunch</span><span class="yellow">40g</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:22%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-header"><span style="color:var(--muted)">Snack (5:30pm)</span><span class="yellow">25g</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:14%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-header"><span style="color:var(--muted)">Dinner</span><span class="yellow">35g</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:19%"></div></div>
+        </div>
+        <div style="text-align:right; font-family:'Bebas Neue',sans-serif; font-size:28px;" class="green">185g Total</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: MEAL PLAN -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <span class="section-title">Weekly Meal Plan</span>
+      <span class="section-line"></span>
+    </div>
+
+    <p style="font-size:13px; color:var(--muted); margin-bottom:28px; max-width:700px;">Designed for two. Lunch and dinner are batch-cooked — Day 1 cook fresh, Day 2 enjoy leftovers. Breakfast rotates between egg and turkey bacon combinations.</p>
+
+    <div class="meal-header">
+      <div class="meal-header-cell">Day</div>
+      <div class="meal-header-cell">Breakfast</div>
+      <div class="meal-header-cell">Lunch</div>
+      <div class="meal-header-cell">Snack</div>
+      <div class="meal-header-cell">Dinner</div>
+    </div>
+
+    <div class="meal-week">
+
+      <!-- MON -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">MON</div>
+          <div class="meal-day-type yellow">Ride Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">4 Scrambled Eggs + 3 Turkey Bacon + Greek Yogurt (200g)</div>
+          <div class="meal-macro yellow">~48g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Smash Burger Bowl — lean beef, lettuce, tomato, pickles, special sauce on rice</div>
+          <div class="meal-macro yellow">~50g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Cottage Cheese (1 cup) + Blueberries</div>
+          <div class="meal-macro yellow">~28g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner ★ Cook for 2</div>
+          <div class="meal-name">Teriyaki Salmon + Jasmine Rice + Roasted Broccoli</div>
+          <div class="meal-macro yellow">~42g protein</div>
+          <div class="meal-leftovers">↻ Leftovers → Tuesday dinner</div>
+        </div>
+      </div>
+
+      <!-- TUE -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">TUE</div>
+          <div class="meal-day-type blue">Lift Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Egg White Omelette (4 whole eggs) + Turkey Bacon + Avocado</div>
+          <div class="meal-macro yellow">~45g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch — Leftovers</div>
+          <div class="meal-name">Burger Bowl — leftovers from Monday</div>
+          <div class="meal-macro yellow">~50g protein</div>
+          <div class="meal-leftovers">↻ From Monday lunch</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Protein Shake + Banana</div>
+          <div class="meal-macro yellow">~32g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner — Leftovers</div>
+          <div class="meal-name">Teriyaki Salmon + Rice + Broccoli</div>
+          <div class="meal-macro yellow">~42g protein</div>
+          <div class="meal-leftovers">↻ From Monday dinner</div>
+        </div>
+      </div>
+
+      <!-- WED -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">WED</div>
+          <div class="meal-day-type yellow">Ride Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">4 Fried Eggs + Turkey Bacon + Sourdough Toast</div>
+          <div class="meal-macro yellow">~46g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch ★ Cook for 2</div>
+          <div class="meal-name">Seared Tuna Steak Bowl — tuna, edamame, cucumber, avocado, sesame, brown rice</div>
+          <div class="meal-macro yellow">~52g protein</div>
+          <div class="meal-leftovers">↻ Leftovers → Thursday lunch</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Hard Boiled Eggs x2 + Almonds (20g)</div>
+          <div class="meal-macro yellow">~18g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner ★ Cook for 2</div>
+          <div class="meal-name">Turkey Meatballs in Tomato Sauce + Zucchini Noodles</div>
+          <div class="meal-macro yellow">~48g protein</div>
+          <div class="meal-leftovers">↻ Leftovers → Thursday dinner</div>
+        </div>
+      </div>
+
+      <!-- THU -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">THU</div>
+          <div class="meal-day-type blue">Lift Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Egg Muffins x4 (eggs, spinach, turkey bacon) + Greek Yogurt</div>
+          <div class="meal-macro yellow">~48g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch — Leftovers</div>
+          <div class="meal-name">Tuna Bowl — leftovers from Wednesday</div>
+          <div class="meal-macro yellow">~52g protein</div>
+          <div class="meal-leftovers">↻ From Wednesday lunch</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Cottage Cheese + Apple + Walnuts</div>
+          <div class="meal-macro yellow">~26g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner — Leftovers</div>
+          <div class="meal-name">Turkey Meatballs + Zucchini Noodles</div>
+          <div class="meal-macro yellow">~48g protein</div>
+          <div class="meal-leftovers">↻ From Wednesday dinner</div>
+        </div>
+      </div>
+
+      <!-- FRI -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">FRI</div>
+          <div class="meal-day-type yellow">Ride Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">4 Poached Eggs + Turkey Bacon + Sliced Avocado</div>
+          <div class="meal-macro yellow">~45g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch ★ Cook for 2</div>
+          <div class="meal-name">Grilled Salmon Caesar Salad — romaine, parmesan, croutons, salmon fillet</div>
+          <div class="meal-macro yellow">~48g protein</div>
+          <div class="meal-leftovers">↻ Leftovers → Saturday lunch</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Protein Shake + Rice Cakes + PB</div>
+          <div class="meal-macro yellow">~30g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner ★ Cook for 2</div>
+          <div class="meal-name">Smash Burgers (lean beef, brioche, caramelised onion) + Sweet Potato Fries</div>
+          <div class="meal-macro yellow">~50g protein</div>
+          <div class="meal-leftovers">↻ Leftovers → Saturday dinner</div>
+        </div>
+      </div>
+
+      <!-- SAT -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">SAT</div>
+          <div class="meal-day-type blue">Lift Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Weekend Eggs Benedict — eggs, turkey bacon, English muffin, light hollandaise</div>
+          <div class="meal-macro yellow">~44g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch — Leftovers</div>
+          <div class="meal-name">Salmon Caesar Salad — leftovers from Friday</div>
+          <div class="meal-macro yellow">~48g protein</div>
+          <div class="meal-leftovers">↻ From Friday lunch</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Greek Yogurt + Honey + Mixed Berries + Granola (30g)</div>
+          <div class="meal-macro yellow">~22g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner — Leftovers</div>
+          <div class="meal-name">Smash Burgers + Sweet Potato Fries</div>
+          <div class="meal-macro yellow">~50g protein</div>
+          <div class="meal-leftovers">↻ From Friday dinner</div>
+        </div>
+      </div>
+
+      <!-- SUN -->
+      <div class="meal-day">
+        <div class="meal-day-label">
+          <div class="meal-day-name">SUN</div>
+          <div class="meal-day-type" style="color:var(--muted)">Rest Day</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Veggie Scramble — 4 eggs, spinach, capsicum, feta, turkey bacon</div>
+          <div class="meal-macro yellow">~46g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Lunch — Light</div>
+          <div class="meal-name">Chicken + Avocado Lettuce Wraps + Soup</div>
+          <div class="meal-macro yellow">~38g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">String Cheese x2 + Apple</div>
+          <div class="meal-macro yellow">~14g protein</div>
+        </div>
+        <div class="meal-cell">
+          <div class="meal-type">Dinner — Prep Day</div>
+          <div class="meal-name">Pan-Seared White Fish (cod/barramundi) + Roasted Veg + Quinoa</div>
+          <div class="meal-macro yellow">~44g protein</div>
+          <div class="meal-leftovers">Rest day — lighter carbs overall</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RECIPE HIGHLIGHTS -->
+    <div style="margin-top: 40px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:20px; text-transform:uppercase;">// Signature Recipe Cards</div>
+
+      <div class="grid-3">
+
+        <div class="recipe-card">
+          <div class="tag-leftovers">2-Day Batch</div>
+          <div class="recipe-title">Teriyaki Salmon</div>
+          <div class="recipe-meta">For 2 · 30 min · Mon/Tue dinner</div>
+          <div class="recipe-macros">
+            <div class="recipe-macro"><div class="recipe-macro-val yellow">42g</div><div class="recipe-macro-lbl">Protein</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val" style="color:var(--muted)">520</div><div class="recipe-macro-lbl">Calories</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val blue">38g</div><div class="recipe-macro-lbl">Carbs</div></div>
+          </div>
+          <div class="recipe-ingr">
+            2× 200g salmon fillets · 3 tbsp soy sauce · 2 tbsp honey · 1 tbsp sesame oil · 1 tsp ginger · 2 cloves garlic · 300g jasmine rice · 2 heads broccoli · sesame seeds
+            <div class="divider"></div>
+            Marinate salmon 20 min. Pan-sear 4 min/side. Glaze with reduced marinade. Serve over rice with roasted broccoli (200°C, 20 min).
+          </div>
+        </div>
+
+        <div class="recipe-card">
+          <div class="tag-leftovers">2-Day Batch</div>
+          <div class="recipe-title">Smash Burger Bowl</div>
+          <div class="recipe-meta">For 2 · 25 min · Mon/Tue lunch</div>
+          <div class="recipe-macros">
+            <div class="recipe-macro"><div class="recipe-macro-val yellow">50g</div><div class="recipe-macro-lbl">Protein</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val" style="color:var(--muted)">580</div><div class="recipe-macro-lbl">Calories</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val blue">45g</div><div class="recipe-macro-lbl">Carbs</div></div>
+          </div>
+          <div class="recipe-ingr">
+            400g lean ground beef (90%) · 2 cups cooked brown rice · romaine lettuce · tomato · dill pickles · 2 slices cheese · Greek yogurt + sriracha + mustard (sauce)
+            <div class="divider"></div>
+            Form thin beef patties, smash on screaming hot cast iron. 2 min/side. Layer over rice with all toppings. Sauce: ½ cup Greek yogurt + 1 tbsp sriracha + 1 tbsp mustard.
+          </div>
+        </div>
+
+        <div class="recipe-card">
+          <div class="tag-leftovers">2-Day Batch</div>
+          <div class="recipe-title">Turkey Meatballs</div>
+          <div class="recipe-meta">For 2 · 35 min · Wed/Thu dinner</div>
+          <div class="recipe-macros">
+            <div class="recipe-macro"><div class="recipe-macro-val yellow">48g</div><div class="recipe-macro-lbl">Protein</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val" style="color:var(--muted)">480</div><div class="recipe-macro-lbl">Calories</div></div>
+            <div class="recipe-macro"><div class="recipe-macro-val blue">28g</div><div class="recipe-macro-lbl">Carbs</div></div>
+          </div>
+          <div class="recipe-ingr">
+            500g ground turkey · 1 egg · ¼ cup parmesan · 2 cloves garlic · Italian herbs · 1 can crushed tomatoes · 2 zucchinis (spiralized) · fresh basil · olive oil
+            <div class="divider"></div>
+            Mix turkey with egg, parmesan, garlic, herbs. Roll into 16 balls. Brown in olive oil 6 min. Simmer in tomato sauce 15 min. Serve over zucchini noodles.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: SLEEP & SUPPLEMENTS -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <span class="section-title">Sleep & Supplements</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-label">Sleep Protocol</div>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <span style="color:var(--accent); font-family:'DM Mono',monospace; font-size:18px; line-height:1;">01</span>
+              <div><div style="font-size:14px; font-weight:500;">Fixed 7am wake time — 7 days/week</div><div style="font-size:12px;color:var(--muted);">Most impactful sleep habit. Non-negotiable.</div></div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <span style="color:var(--accent); font-family:'DM Mono',monospace; font-size:18px; line-height:1;">02</span>
+              <div><div style="font-size:14px; font-weight:500;">Room temp 65–68°F</div><div style="font-size:12px;color:var(--muted);">Sleep quality drops significantly above this range.</div></div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <span style="color:var(--accent); font-family:'DM Mono',monospace; font-size:18px; line-height:1;">03</span>
+              <div><div style="font-size:14px; font-weight:500;">No screens 30–60 min before bed</div><div style="font-size:12px;color:var(--muted);">Or blue light glasses minimum.</div></div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <span style="color:var(--accent); font-family:'DM Mono',monospace; font-size:18px; line-height:1;">04</span>
+              <div><div style="font-size:14px; font-weight:500;">No alcohol within 3 hrs of bed</div><div style="font-size:12px;color:var(--muted);">Fragments sleep architecture, kills recovery.</div></div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <span style="color:var(--accent); font-family:'DM Mono',monospace; font-size:18px; line-height:1;">05</span>
+              <div><div style="font-size:14px; font-weight:500;">Ride days = target 8 hrs minimum</div><div style="font-size:12px;color:var(--muted);">HGH and muscle repair peak in deep sleep.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-label">Magnesium Glycinate Protocol</div>
+          <div style="margin-top:16px;">
+            <div class="card-val green" style="font-size:36px;">300–400<span style="font-size:18px;color:var(--muted);">mg</span></div>
+            <div class="card-desc" style="margin-top:4px;">Elemental magnesium as bisglycinate · 30–60 min before bed</div>
+          </div>
+          <div class="divider"></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">Recommended Brands — Amazon.ca</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px; background:var(--subtle);">
+              <span>🥇 CanPrev Magnesium Bisglycinate 200</span>
+              <span class="green" style="font-family:'DM Mono',monospace; font-size:11px;">Best Value</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px; background:var(--subtle);">
+              <span>🥈 Thorne Magnesium Bisglycinate</span>
+              <span class="yellow" style="font-family:'DM Mono',monospace; font-size:11px;">Premium</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px; background:var(--subtle);">
+              <span>🥉 Naka Platinum Bisglycinate</span>
+              <span class="blue" style="font-family:'DM Mono',monospace; font-size:11px;">Value Size</span>
+            </div>
+          </div>
+          <div style="margin-top:16px; font-size:12px; color:var(--muted); font-style:italic;">Check label for elemental mg — not total compound weight. Target 300–400mg elemental.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: KEY RULES -->
+  <div class="section">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <span class="section-title">The Non-Negotiables</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-label">Rule 01</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Protein First</div>
+        <div class="card-desc">Hit 180g protein every single day — training or not. This protects your 130 lbs of muscle mass while losing 20 lbs of fat. Everything else is secondary.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rule 02</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Kitchen Closes</div>
+        <div class="card-desc">8pm hard stop. This single habit eliminates the majority of unplanned snacking and sweet treats. Brush teeth immediately after dinner if needed.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rule 03</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Same Wake Time</div>
+        <div class="card-desc">7am every day including weekends. This is the anchor of your circadian rhythm and the foundation of sleep quality — more impactful than any supplement.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rule 04</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Snack Intentionally</div>
+        <div class="card-desc">One planned snack at 5:30pm from the pre-approved list. Not spontaneous, not multiple. Sweet cravings get a protein-first response before anything sweet.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rule 05</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Fuel the Work</div>
+        <div class="card-desc">Don't cut calories on hard training days. Eat more on ride and lift days (2,200–2,400 cal), less on rest days (2,000). Let training drive the deficit, not starvation.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rule 06</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--accent); margin-bottom:8px;">Retest FTP</div>
+        <div class="card-desc">Week 8 FTP test is mandatory. Every zone, every workout, every phase of the training plan depends on this number being accurate and current.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>
+    <div class="footer-text">Generated April 2026 · Claude AI × Peloton Data Analysis</div>
+    <div class="footer-text" style="margin-top:4px;">Update this plan after FTP retest at Week 8</div>
+  </div>
+  <div class="footer-accent">165 LBS.<br>250 WATTS.</div>
+</div>
+
+</body>
+</html>
