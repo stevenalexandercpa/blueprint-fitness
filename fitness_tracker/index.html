@@ -37,7 +37,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -183,7 +183,7 @@
 
   .nav-user {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 1px;
     color: var(--muted);
   }
@@ -234,7 +234,7 @@
     background: none;
     color: var(--muted);
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 1px;
     text-transform: uppercase;
     transition: color 0.2s;
@@ -283,7 +283,7 @@
 
   .streak-label {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     color: var(--muted);
     text-transform: uppercase;
@@ -293,20 +293,24 @@
   .streak-dots { display: flex; gap: 6px; align-items: center; }
 
   .streak-dot {
-    width: 28px; height: 28px;
+    width: 32px; height: 32px;
     border-radius: 50%;
-    border: 1px solid var(--border2);
+    border: 2px solid var(--border2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'DM Mono', monospace;
-    font-size: 8px;
+    font-size: 9px;
     color: var(--muted);
+    flex-direction: column;
+    gap: 1px;
+    flex-shrink: 0;
   }
 
-  .streak-dot.done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .streak-dot.done { background: var(--green-dim); border-color: var(--green); color: var(--green); }
   .streak-dot.partial { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
-  .streak-dot.today { border-color: var(--accent); animation: pulse-border 2s infinite; }
+  .streak-dot.inprogress { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); animation: pulse-border 2s infinite; }
+  .streak-dot.today { border-color: var(--accent); color: var(--accent); }
 
   @keyframes pulse-border {
     0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
@@ -334,17 +338,17 @@
     align-items: center; justify-content: center;
   }
 
-  .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
+  .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
   .ring-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 1px; }
   .ring-info { flex: 1; }
-  .ring-info-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; margin-bottom: 8px; }
-  .ring-next { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .ring-next-task { font-size: 14px; font-weight: 500; color: var(--text); }
+  .ring-info-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px; margin-bottom: 8px; }
+  .ring-next { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+  .ring-next-task { font-size: 16px; font-weight: 500; color: var(--text); }
 
   .section-label {
     padding: 16px 16px 8px;
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     color: var(--muted);
     text-transform: uppercase;
@@ -371,7 +375,7 @@
 
   .task-header { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
 
-  .task-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 44px; flex-shrink: 0; }
+  .task-time { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); width: 44px; flex-shrink: 0; }
 
   .task-icon {
     width: 32px; height: 32px; border-radius: 50%;
@@ -387,8 +391,8 @@
   .task-icon.work { background: var(--muted2); }
 
   .task-body { flex: 1; }
-  .task-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
-  .task-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .task-name { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .task-desc { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 
   .task-status {
     width: 32px; height: 32px; border-radius: 50%;
@@ -459,8 +463,36 @@
 
   .meal-card-type { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
   .meal-card-protein { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); }
-  .meal-card-name { padding: 12px 16px; font-size: 14px; font-weight: 500; line-height: 1.4; }
-  .meal-card-detail { padding: 0 16px 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .meal-card-name { padding: 12px 16px; font-size: 16px; font-weight: 500; line-height: 1.4; }
+  .meal-card-detail { padding: 0 16px 12px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .meal-card-recipe-btn {
+    margin: 0 16px 12px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-align: left;
+    width: calc(100% - 32px);
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .meal-card-recipe-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .meal-card-recipe-body {
+    display: none;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.9;
+    white-space: pre-line;
+  }
+  .meal-card-recipe-body.open { display: block; }
 
   /* ── 2-DAY VIEW ── */
   .two-day-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -489,7 +521,7 @@
   .two-day-check.missed { background: var(--red-dim); border-color: var(--red); color: var(--red); }
   .two-day-check.late { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
 
-  .two-day-task-name { font-size: 12px; font-weight: 500; line-height: 1.3; flex: 1; }
+  .two-day-task-name { font-size: 14px; font-weight: 500; line-height: 1.3; flex: 1; }
   .two-day-time { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; }
 
   /* ── WEEKLY VIEW ── */
@@ -523,7 +555,7 @@
 
   .stat-box { background: var(--card); border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
   .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
-  .stat-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
 
   /* ── COUPLES VIEW ── */
   .couples-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -668,7 +700,7 @@
     <div id="signupForm" style="display:none">
       <div class="form-group">
         <label class="form-label">Your Name</label>
-        <input class="form-input" type="text" id="signupName" placeholder="Steve or Bekky">
+        <input class="form-input" type="text" id="signupName" placeholder="First Last">
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
@@ -766,18 +798,18 @@
       <div class="vs-banner">
         <div class="vs-streak">
           <div class="vs-streak-num" id="vsStreakSteve" style="color:var(--accent)">—</div>
-          <div class="vs-streak-name">Steve</div>
+          <div class="vs-streak-name" id="vsNameMe">Me</div>
         </div>
         <div class="vs-text">VS</div>
         <div class="vs-streak">
           <div class="vs-streak-num" id="vsStreakBekky" style="color:var(--pink)">—</div>
-          <div class="vs-streak-name">Bekky</div>
+          <div class="vs-streak-name" id="vsNamePartner">Partner</div>
         </div>
       </div>
 
       <div class="couples-grid">
         <div class="couple-card steve">
-          <div class="couple-name steve">STEVE</div>
+          <div class="couple-name steve" id="coupleNameMe">ME</div>
           <div class="couple-ring">
             <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border2)" stroke-width="5"/>
@@ -786,11 +818,11 @@
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)" id="couplePctSteve">0%</div>
           </div>
           <div class="couple-pct">Today: <span id="coupleTasksSteve" style="color:var(--accent)">—</span></div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;" id="coupleGoalSteve">FTP → 250W · 165 lbs</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;" id="coupleGoalMe">—</div>
         </div>
 
         <div class="couple-card bekky">
-          <div class="couple-name bekky">BEKKY</div>
+          <div class="couple-name bekky" id="coupleNamePartner">PARTNER</div>
           <div class="couple-ring">
             <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border2)" stroke-width="5"/>
@@ -799,7 +831,7 @@
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--pink)" id="couplePctBekky">0%</div>
           </div>
           <div class="couple-pct">Today: <span id="coupleTasksBekky" style="color:var(--pink)">—</span></div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;">Health · Longevity · Vitality</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;" id="coupleGoalPartner">—</div>
         </div>
       </div>
 
@@ -915,14 +947,42 @@ const TASK_TEMPLATES = {
   ]
 };
 
+const RECIPES = {
+  scrambled_eggs: "1. Crack 4 eggs into a bowl, whisk well with salt and pepper.\n2. Heat non-stick pan on medium-low, add butter.\n3. Add eggs, stir slowly and constantly with a spatula.\n4. Remove from heat while still slightly wet — residual heat finishes them.\n5. Serve immediately alongside turkey bacon.",
+  turkey_bacon: "1. Place strips in cold pan.\n2. Heat to medium, cook 3–4 min per side until crispy.\n3. Drain on paper towel. Done.",
+  omelette: "1. Whisk 4 eggs with salt.\n2. Heat pan medium-high with butter.\n3. Pour eggs in, tilt pan to spread.\n4. Add toppings to one half when edges set.\n5. Fold in half and slide onto plate.",
+  egg_muffins: "1. Preheat oven to 375°F (190°C). Grease a 12-muffin tin.\n2. Dice turkey bacon and sauté briefly.\n3. Whisk 8 eggs with salt, pepper, and a splash of milk.\n4. Add spinach and turkey bacon to egg mixture.\n5. Pour into muffin tin ¾ full.\n6. Bake 18–20 min until set and golden. Keeps in fridge 4 days.",
+  poached_eggs: "1. Bring 3 inches of water to a gentle simmer, add splash of vinegar.\n2. Crack each egg into a small cup.\n3. Stir water to create a gentle whirlpool, slide egg in.\n4. Cook 3 min for runny, 4 min for set.\n5. Remove with slotted spoon, pat dry.",
+  veggie_scramble: "1. Dice capsicum, wilt spinach in pan with olive oil.\n2. Add whisked eggs (4), scramble on medium-low.\n3. Fold in crumbled feta at the end.\n4. Season and serve alongside turkey bacon.",
+  eggs_benedict: "1. Toast English muffin halves.\n2. Cook turkey bacon until crispy.\n3. Poach 2 eggs per person (see poached egg method).\n4. Stack: muffin → bacon → egg → light hollandaise.\n5. Quick hollandaise: blend 2 yolks, 1 tbsp lemon juice, stream in 100g melted butter, season.",
+  burger_bowl: "1. Mix 400g lean ground beef with salt, pepper, garlic powder.\n2. Form into thin patties (smash-size).\n3. Heat cast iron to screaming hot. Add patties and smash flat with spatula.\n4. Cook 2 min, flip, add cheese slice, cook 1 more min.\n5. Build bowl: cooked rice → lettuce → tomato → pickles → beef → sauce.\n6. Sauce: ½ cup Greek yogurt + 1 tbsp sriracha + 1 tbsp mustard + pinch garlic. Mix well.",
+  teriyaki_salmon: "1. Mix marinade: 3 tbsp soy sauce, 2 tbsp honey, 1 tbsp sesame oil, 1 tsp grated ginger, 2 cloves minced garlic.\n2. Marinate 2×200g salmon fillets for 20 min.\n3. Heat pan to medium-high. Sear salmon skin-side up 4 min.\n4. Flip, brush with extra marinade, cook 3–4 min more.\n5. Rest in pan off heat 2 min. Drizzle remaining glaze over.\n6. Roast broccoli: 200°C, olive oil, salt, 20 min.\n7. Serve over jasmine rice. Garnish with sesame seeds.",
+  tuna_bowl: "1. Season 2 tuna steaks with soy sauce, sesame oil, salt, pepper.\n2. Heat pan to very high heat — almost smoking.\n3. Sear tuna 60–90 seconds per side (stay rare in centre).\n4. Slice thin against the grain.\n5. Build bowl: brown rice → edamame → sliced cucumber → avocado → tuna.\n6. Dressing: 2 tbsp soy, 1 tbsp sesame oil, 1 tsp rice vinegar, pinch chilli. Drizzle over.",
+  turkey_meatballs: "1. Combine 500g ground turkey, 1 egg, ¼ cup parmesan, 2 minced garlic cloves, 1 tsp Italian herbs, salt and pepper. Mix well.\n2. Roll into 16 equal balls.\n3. Heat olive oil in large pan, brown meatballs 6 min turning occasionally.\n4. Add 1 can crushed tomatoes + pinch sugar + basil. Simmer 15 min.\n5. Spiralize 2 zucchinis. Sauté in olive oil 2–3 min — don't overcook.\n6. Serve meatballs and sauce over zucchini noodles. Top with parmesan.",
+  salmon_caesar: "1. Season salmon fillet with salt, pepper, olive oil.\n2. Pan-sear or grill 4 min per side until cooked through.\n3. Build salad: torn romaine, parmesan shavings, croutons.\n4. Caesar dressing: 2 tbsp mayo, 1 tbsp lemon, 1 tsp worcestershire, 1 clove garlic minced, 2 tbsp parmesan. Whisk.\n5. Toss salad with dressing, top with flaked salmon.",
+  smash_burgers: "1. Divide 400g lean beef into 4 balls (no seasoning yet).\n2. Heat cast iron to very high heat with thin layer of oil.\n3. Place ball on pan, immediately smash flat with spatula — as thin as possible.\n4. Season with salt and pepper. Cook 2–3 min until edges brown.\n5. Flip once, add cheese if desired, cook 1 min.\n6. Toast brioche buns in same pan.\n7. Build: bun → sauce → lettuce → burger → caramelised onion → pickles.\n8. Sweet potato fries: cube, toss in olive oil + paprika + salt, roast 200°C 25–30 min.",
+  white_fish: "1. Pat cod or barramundi dry with paper towel. Season generously.\n2. Heat pan to medium-high with olive oil.\n3. Place fish presentation-side down, cook 3–4 min without touching.\n4. Flip carefully, cook 2–3 min more.\n5. Rest 1 min.\n6. Serve with roasted seasonal veg and cooked quinoa (ratio 1:2 quinoa:water, simmer 15 min).",
+  chicken_wraps: "1. Season chicken breast with cumin, garlic, salt.\n2. Pan-cook or grill 6–7 min per side until cooked through. Slice thin.\n3. Separate large butter lettuce leaves as wraps.\n4. Fill with sliced chicken, shredded carrot, cucumber, avocado, drizzle of hoisin or sriracha.",
+};
+
+const MEAL_RECIPES = {
+  0: { breakfast:'veggie_scramble', dinner:'white_fish' },
+  1: { breakfast:'scrambled_eggs', lunch:'burger_bowl', dinner:'teriyaki_salmon' },
+  2: { breakfast:'omelette' },
+  3: { breakfast:'scrambled_eggs', lunch:'tuna_bowl', dinner:'turkey_meatballs' },
+  4: { breakfast:'egg_muffins' },
+  5: { breakfast:'poached_eggs', lunch:'salmon_caesar', dinner:'smash_burgers' },
+  6: { breakfast:'eggs_benedict' },
+};
+
 const MEALS = {
-  0: { breakfast:{name:'Veggie Scramble',detail:'4 eggs, spinach, capsicum, feta, turkey bacon',protein:'46g',cal:'380'}, lunch:{name:'Chicken Lettuce Wraps + Soup',detail:'Light rest day meal',protein:'38g',cal:'340'}, snack:{name:'String Cheese x2 + Apple',detail:'Quick and clean',protein:'14g',cal:'220'}, dinner:{name:'Pan-Seared White Fish + Roasted Veg + Quinoa',detail:'Cod or barramundi',protein:'44g',cal:'460'} },
-  1: { breakfast:{name:'4 Scrambled Eggs + Turkey Bacon + Greek Yogurt',detail:'High protein start',protein:'48g',cal:'420'}, lunch:{name:'Smash Burger Bowl ★ BATCH COOK',detail:'Lean beef, lettuce, tomato, pickles, special sauce on rice · Makes 2 servings',protein:'50g',cal:'580',batch:'Leftovers → Tuesday lunch'}, snack:{name:'Cottage Cheese + Blueberries',detail:'1 cup cottage cheese',protein:'28g',cal:'200'}, dinner:{name:'Teriyaki Salmon ★ BATCH COOK',detail:'Salmon fillet, jasmine rice, roasted broccoli · Makes 2 servings',protein:'42g',cal:'520',batch:'Leftovers → Tuesday dinner'} },
-  2: { breakfast:{name:'Egg White Omelette + Turkey Bacon + Avocado',detail:'4 whole eggs, half avocado',protein:'45g',cal:'410'}, lunch:{name:'Smash Burger Bowl — Leftovers ♻',detail:'From Monday — reheat 2 min',protein:'50g',cal:'580',leftover:true}, snack:{name:'Protein Shake + Banana',detail:'30g whey or plant protein',protein:'32g',cal:'250'}, dinner:{name:'Teriyaki Salmon — Leftovers ♻',detail:'From Monday — reheat gently',protein:'42g',cal:'520',leftover:true} },
-  3: { breakfast:{name:'4 Fried Eggs + Turkey Bacon + Sourdough Toast',detail:'2 slices sourdough',protein:'46g',cal:'440'}, lunch:{name:'Seared Tuna Steak Bowl ★ BATCH COOK',detail:'Tuna, edamame, cucumber, avocado, sesame, brown rice · Makes 2 servings',protein:'52g',cal:'540',batch:'Leftovers → Thursday lunch'}, snack:{name:'Hard Boiled Eggs x2 + Almonds',detail:'20g almonds',protein:'18g',cal:'240'}, dinner:{name:'Turkey Meatballs in Tomato Sauce ★ BATCH COOK',detail:'Ground turkey, zucchini noodles, parmesan · Makes 2 servings',protein:'48g',cal:'480',batch:'Leftovers → Thursday dinner'} },
-  4: { breakfast:{name:'Egg Muffins x4 + Greek Yogurt',detail:'Eggs, spinach, turkey bacon baked muffins',protein:'48g',cal:'400'}, lunch:{name:'Tuna Steak Bowl — Leftovers ♻',detail:'From Wednesday',protein:'52g',cal:'540',leftover:true}, snack:{name:'Cottage Cheese + Apple + Walnuts',detail:'Balanced fat + protein + fibre',protein:'26g',cal:'260'}, dinner:{name:'Turkey Meatballs — Leftovers ♻',detail:'From Wednesday — reheat in sauce',protein:'48g',cal:'480',leftover:true} },
-  5: { breakfast:{name:'4 Poached Eggs + Turkey Bacon + Avocado',detail:'Classic high-protein breakfast',protein:'45g',cal:'420'}, lunch:{name:'Grilled Salmon Caesar ★ BATCH COOK',detail:'Romaine, parmesan, croutons, salmon · Makes 2 servings',protein:'48g',cal:'510',batch:'Leftovers → Saturday lunch'}, snack:{name:'Protein Shake + Rice Cakes + PB',detail:'2 rice cakes, 1 tbsp peanut butter',protein:'30g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries ★ BATCH COOK',detail:'Lean beef, brioche, caramelised onion · Makes 2 servings',protein:'50g',cal:'620',batch:'Leftovers → Saturday dinner'} },
-  6: { breakfast:{name:'Weekend Eggs Benedict',detail:'Eggs, turkey bacon, English muffin, light hollandaise',protein:'44g',cal:'460'}, lunch:{name:'Salmon Caesar — Leftovers ♻',detail:'From Friday',protein:'48g',cal:'510',leftover:true}, snack:{name:'Greek Yogurt + Honey + Berries + Granola',detail:'30g granola',protein:'22g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries — Leftovers ♻',detail:'From Friday',protein:'50g',cal:'620',leftover:true} },
+  0: { breakfast:{name:'Veggie Scramble',detail:'4 eggs, spinach, capsicum, feta, turkey bacon',protein:'46g',cal:'380'}, lunch:{name:'Chicken Lettuce Wraps + Soup',detail:'Light rest day meal',protein:'38g',cal:'340',recipe:'chicken_wraps'}, snack:{name:'String Cheese x2 + Apple',detail:'Quick and clean',protein:'14g',cal:'220'}, dinner:{name:'Pan-Seared White Fish + Roasted Veg + Quinoa',detail:'Cod or barramundi',protein:'44g',cal:'460',recipe:'white_fish'} },
+  1: { breakfast:{name:'4 Scrambled Eggs + Turkey Bacon + Greek Yogurt',detail:'High protein start',protein:'48g',cal:'420',recipe:'scrambled_eggs'}, lunch:{name:'Smash Burger Bowl ★ BATCH COOK',detail:'Lean beef, lettuce, tomato, pickles, special sauce on rice · Makes 2 servings',protein:'50g',cal:'580',batch:'Leftovers → Tuesday lunch',recipe:'burger_bowl'}, snack:{name:'Cottage Cheese + Blueberries',detail:'1 cup cottage cheese',protein:'28g',cal:'200'}, dinner:{name:'Teriyaki Salmon ★ BATCH COOK',detail:'Salmon fillet, jasmine rice, roasted broccoli · Makes 2 servings',protein:'42g',cal:'520',batch:'Leftovers → Tuesday dinner',recipe:'teriyaki_salmon'} },
+  2: { breakfast:{name:'Egg White Omelette + Turkey Bacon + Avocado',detail:'4 whole eggs, half avocado',protein:'45g',cal:'410',recipe:'omelette'}, lunch:{name:'Smash Burger Bowl — Leftovers ♻',detail:'From Monday — reheat 2 min',protein:'50g',cal:'580',leftover:true}, snack:{name:'Protein Shake + Banana',detail:'30g whey or plant protein',protein:'32g',cal:'250'}, dinner:{name:'Teriyaki Salmon — Leftovers ♻',detail:'From Monday — reheat gently',protein:'42g',cal:'520',leftover:true} },
+  3: { breakfast:{name:'4 Fried Eggs + Turkey Bacon + Sourdough Toast',detail:'2 slices sourdough',protein:'46g',cal:'440',recipe:'scrambled_eggs'}, lunch:{name:'Seared Tuna Steak Bowl ★ BATCH COOK',detail:'Tuna, edamame, cucumber, avocado, sesame, brown rice · Makes 2 servings',protein:'52g',cal:'540',batch:'Leftovers → Thursday lunch',recipe:'tuna_bowl'}, snack:{name:'Hard Boiled Eggs x2 + Almonds',detail:'20g almonds',protein:'18g',cal:'240'}, dinner:{name:'Turkey Meatballs in Tomato Sauce ★ BATCH COOK',detail:'Ground turkey, zucchini noodles, parmesan · Makes 2 servings',protein:'48g',cal:'480',batch:'Leftovers → Thursday dinner',recipe:'turkey_meatballs'} },
+  4: { breakfast:{name:'Egg Muffins x4 + Greek Yogurt',detail:'Eggs, spinach, turkey bacon baked muffins',protein:'48g',cal:'400',recipe:'egg_muffins'}, lunch:{name:'Tuna Steak Bowl — Leftovers ♻',detail:'From Wednesday',protein:'52g',cal:'540',leftover:true}, snack:{name:'Cottage Cheese + Apple + Walnuts',detail:'Balanced fat + protein + fibre',protein:'26g',cal:'260'}, dinner:{name:'Turkey Meatballs — Leftovers ♻',detail:'From Wednesday — reheat in sauce',protein:'48g',cal:'480',leftover:true} },
+  5: { breakfast:{name:'4 Poached Eggs + Turkey Bacon + Avocado',detail:'Classic high-protein breakfast',protein:'45g',cal:'420',recipe:'poached_eggs'}, lunch:{name:'Grilled Salmon Caesar ★ BATCH COOK',detail:'Romaine, parmesan, croutons, salmon · Makes 2 servings',protein:'48g',cal:'510',batch:'Leftovers → Saturday lunch',recipe:'salmon_caesar'}, snack:{name:'Protein Shake + Rice Cakes + PB',detail:'2 rice cakes, 1 tbsp peanut butter',protein:'30g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries ★ BATCH COOK',detail:'Lean beef, brioche, caramelised onion · Makes 2 servings',protein:'50g',cal:'620',batch:'Leftovers → Saturday dinner',recipe:'smash_burgers'} },
+  6: { breakfast:{name:'Weekend Eggs Benedict',detail:'Eggs, turkey bacon, English muffin, light hollandaise',protein:'44g',cal:'460',recipe:'eggs_benedict'}, lunch:{name:'Salmon Caesar — Leftovers ♻',detail:'From Friday',protein:'48g',cal:'510',leftover:true}, snack:{name:'Greek Yogurt + Honey + Berries + Granola',detail:'30g granola',protein:'22g',cal:'310'}, dinner:{name:'Smash Burgers + Sweet Potato Fries — Leftovers ♻',detail:'From Friday',protein:'50g',cal:'620',leftover:true} },
 };
 
 // ══════════════════════════════════════════════
@@ -1065,11 +1125,10 @@ async function loadUserData(userId) {
 }
 
 async function loadOtherUserData() {
-  // Load partner's data for the Together view
-  const partnerName = currentProfile?.name?.toLowerCase() === 'steve' ? 'Bekky' : 'Steve';
+  // Load partner's data — find any profile that isn't the current user
   const { data: profiles } = await sb.from('profiles').select('id,name');
-  const partner = profiles?.find(p => p.name?.toLowerCase() === partnerName.toLowerCase());
-  if (!partner) return {};
+  const partner = profiles?.find(p => p.id !== currentUser.id);
+  if (!partner) return { completions: {}, name: null };
 
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
   const from = thirtyDaysAgo.toISOString().slice(0,10);
@@ -1086,7 +1145,7 @@ async function loadOtherUserData() {
       completions[row.date][row.task_id] = row.status;
     });
   }
-  return completions;
+  return { completions, name: partner.name };
 }
 
 async function saveCompletion(taskId, status, dateKey) {
@@ -1131,23 +1190,24 @@ async function autoMarkMissed() {
 function calcStreak(completions) {
   let streak = 0;
   const d = new Date();
-  // Check yesterday backwards
+  // Check yesterday backwards — only count if ALL tasks completed
   d.setDate(d.getDate()-1);
   for (let i=0; i<60; i++) {
     const key = d.toISOString().slice(0,10);
     const dt = DAY_TYPES[d.getDay()];
     const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp = completions[key]||{};
-    const hasAny = tasks.some(t=>comp[t.id]==='done'||comp[t.id]==='late');
-    if (!hasAny) break;
+    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late');
+    if (!allDone) break;
     streak++;
     d.setDate(d.getDate()-1);
   }
-  // Check today
+  // Today: only add if ALL tasks complete
   const todayComp = completions[todayKey()]||{};
   const todayDt = dayType();
   const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
-  if (todayTasks.some(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late')) streak++;
+  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late');
+  if (todayAllDone) streak++;
   return streak;
 }
 
@@ -1169,22 +1229,33 @@ function renderDaily() {
   document.getElementById('streakNum').textContent = streak;
   document.getElementById('statStreak').textContent = streak;
 
-  // Streak dots
+  // Streak dots — Mon to Sun of current week
   const dotsEl = document.getElementById('streakDots');
   dotsEl.innerHTML = '';
-  const dayLetters = ['S','M','T','W','T','F','S'];
-  for (let i=6; i>=0; i--) {
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const key=d.toISOString().slice(0,10);
-    const {done,missed}=getDayCompletion(key,userCompletions);
-    const isToday=i===0;
+  const dayLetters = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const todayDate = new Date();
+  const todayDow = todayDate.getDay();
+  // Find Monday of current week
+  const weekMon = new Date(todayDate);
+  weekMon.setDate(todayDate.getDate() - (todayDow === 0 ? 6 : todayDow - 1));
+  for (let i=0; i<7; i++) {
+    const d = new Date(weekMon); d.setDate(weekMon.getDate()+i);
+    const key = d.toISOString().slice(0,10);
+    const todayKey2 = todayDate.toISOString().slice(0,10);
+    const isFuture = d > todayDate && key !== todayKey2;
+    const isToday = key === todayKey2;
+    const {done,missed,total}=getDayCompletion(key,userCompletions);
+    const allDone = done === total && total > 0 && missed === 0;
+    const inProgress = isToday && done > 0 && !allDone;
     let cls='';
-    if(isToday) cls='today';
-    else if(done>0&&missed===0) cls='done';
+    if(allDone) cls='done';
+    else if(inProgress) cls='inprogress';
+    else if(isToday) cls='today';
     else if(done>0) cls='partial';
     const dot=document.createElement('div');
     dot.className='streak-dot '+cls;
-    dot.innerHTML=`<span>${dayLetters[d.getDay()]}</span>`;
+    const checkmark = allDone ? '✓' : '';
+    dot.innerHTML=`<span style="font-size:8px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${checkmark?'<span style="font-size:11px;font-weight:bold">'+checkmark+'</span>':'<span style="font-size:9px">'+d.getDate()+'</span>'}`;
     dotsEl.appendChild(dot);
   }
 
@@ -1307,7 +1378,8 @@ async function undoTask(taskId, dateKey) {
 
 function renderMeals(containerId, dayOffset) {
   const d=new Date(); d.setDate(d.getDate()+dayOffset);
-  const meals=MEALS[d.getDay()]||MEALS[0];
+  const dow=d.getDay();
+  const meals=MEALS[dow]||MEALS[0];
   const el=document.getElementById(containerId);
   if(!el) return;
   el.innerHTML='';
@@ -1316,10 +1388,20 @@ function renderMeals(containerId, dayOffset) {
   order.forEach(key=>{
     const m=meals[key]; if(!m) return;
     let extra='';
-    if(m.batch) extra=`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
-    if(m.leftover) extra=`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);margin-top:4px;">♻ Leftovers</div>`;
+    if(m.batch) extra=`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-top:4px;">↻ ${m.batch}</div>`;
+    if(m.leftover) extra=`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green);margin-top:4px;">♻ Leftovers — no cooking needed</div>`;
     const card=document.createElement('div');
     card.className='meal-card';
+    const cardId='meal-'+containerId+'-'+key;
+    let recipeHtml='';
+    if(m.recipe && RECIPES[m.recipe]) {
+      recipeHtml=`
+        <button class="meal-card-recipe-btn" onclick="toggleRecipe('${cardId}-recipe')">
+          <span>📋 VIEW RECIPE</span><span id="${cardId}-recipe-arrow">▾</span>
+        </button>
+        <div class="meal-card-recipe-body" id="${cardId}-recipe">${RECIPES[m.recipe]}</div>
+      `;
+    }
     card.innerHTML=`
       <div class="meal-card-header">
         <div class="meal-card-type">${labels[key]}</div>
@@ -1327,9 +1409,18 @@ function renderMeals(containerId, dayOffset) {
       </div>
       <div class="meal-card-name">${m.name}</div>
       <div class="meal-card-detail">${m.detail}${extra}</div>
+      ${recipeHtml}
     `;
     el.appendChild(card);
   });
+}
+
+function toggleRecipe(id) {
+  const el=document.getElementById(id);
+  const arrow=document.getElementById(id+'-arrow');
+  if(!el) return;
+  el.classList.toggle('open');
+  if(arrow) arrow.textContent=el.classList.contains('open')?'▴':'▾';
 }
 
 // ══════════════════════════════════════════════
@@ -1454,42 +1545,48 @@ function renderWeekly() {
 // TOGETHER VIEW
 // ══════════════════════════════════════════════
 async function renderTogether() {
-  // Load partner data fresh
-  otherUserCompletions = await loadOtherUserData();
+  // Load partner data fresh — returns { completions, name }
+  const partnerData = await loadOtherUserData();
+  otherUserCompletions = partnerData.completions;
+  const partnerName = partnerData.name || 'Partner';
+  const myName = currentProfile?.name || 'Me';
 
   const dk = todayKey();
   const dt = dayType();
   const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
 
-  // Steve streak
-  const steveIsSteve = currentProfile?.name?.toLowerCase()==='steve';
+  // MY data goes in MY card, PARTNER data goes in PARTNER card
   const myComp = userCompletions;
-  const partnerComp = otherUserCompletions;
+  const theirComp = otherUserCompletions;
 
-  const steveComp = steveIsSteve ? myComp : partnerComp;
-  const bekkyComp = steveIsSteve ? partnerComp : myComp;
+  const myStreak = calcStreak(myComp);
+  const theirStreak = calcStreak(theirComp);
 
-  const steveStreak = calcStreak(steveComp);
-  const bekkyStreak = calcStreak(bekkyComp);
+  // Update names dynamically
+  document.getElementById('vsStreakSteve').textContent = myStreak;
+  document.getElementById('vsStreakBekky').textContent = theirStreak;
+  document.getElementById('vsNameMe').textContent = myName;
+  document.getElementById('vsNamePartner').textContent = partnerName;
+  document.getElementById('coupleNameMe').textContent = myName.toUpperCase();
+  document.getElementById('coupleNamePartner').textContent = partnerName.toUpperCase();
+  document.getElementById('coupleGoalMe').textContent = myName === 'Steve' ? 'FTP → 250W · 165 lbs' : 'Health · Longevity · Vitality';
+  document.getElementById('coupleGoalPartner').textContent = partnerName === 'Steve' ? 'FTP → 250W · 165 lbs' : 'Health · Longevity · Vitality';
 
-  document.getElementById('vsStreakSteve').textContent = steveStreak;
-  document.getElementById('vsStreakBekky').textContent = bekkyStreak;
+  // Today pct — my data
+  const myDone = tasks.filter(t=>(myComp[dk]||{})[t.id]==='done'||(myComp[dk]||{})[t.id]==='late').length;
+  const theirDone = tasks.filter(t=>(theirComp[dk]||{})[t.id]==='done'||(theirComp[dk]||{})[t.id]==='late').length;
+  const myPct = Math.round((myDone/tasks.length)*100);
+  const theirPct = Math.round((theirDone/tasks.length)*100);
 
-  // Today pct
-  const steveDone = tasks.filter(t=>(steveComp[dk]||{})[t.id]==='done'||(steveComp[dk]||{})[t.id]==='late').length;
-  const bekkyDone = tasks.filter(t=>(bekkyComp[dk]||{})[t.id]==='done'||(bekkyComp[dk]||{})[t.id]==='late').length;
-  const stevePct = Math.round((steveDone/tasks.length)*100);
-  const bekkyPct = Math.round((bekkyDone/tasks.length)*100);
+  document.getElementById('couplePctSteve').textContent = myPct+'%';
+  document.getElementById('couplePctBekky').textContent = theirPct+'%';
+  document.getElementById('coupleTasksSteve').textContent = `${myDone}/${tasks.length} tasks`;
+  document.getElementById('coupleTasksBekky').textContent = `${theirDone}/${tasks.length} tasks`;
 
-  document.getElementById('couplePctSteve').textContent = stevePct+'%';
-  document.getElementById('couplePctBekky').textContent = bekkyPct+'%';
-  document.getElementById('coupleTasksSteve').textContent = `${steveDone}/${tasks.length} tasks`;
-  document.getElementById('coupleTasksBekky').textContent = `${bekkyDone}/${tasks.length} tasks`;
-
-  const sOff = 213.6-(stevePct/100)*213.6;
-  const bOff = 213.6-(bekkyPct/100)*213.6;
-  document.getElementById('coupleRingSteve').style.strokeDashoffset = sOff;
-  document.getElementById('coupleRingBekky').style.strokeDashoffset = bOff;
+  const myOff = 213.6-(myPct/100)*213.6;
+  const theirOff = 213.6-(theirPct/100)*213.6;
+  document.getElementById('coupleRingSteve').style.strokeDashoffset = myOff;
+  document.getElementById('coupleRingBekky').style.strokeDashoffset = theirOff;
 
   // Metrics history
   await loadMetricsHistory();
