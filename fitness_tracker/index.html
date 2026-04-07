@@ -933,6 +933,7 @@ let userCompletions = {}; // { dateKey: { taskId: status } }
 let otherUserCompletions = {}; // partner's completions
 let currentTab = 'daily';
 let clockInterval = null;
+let fullRenderInterval = null;
 
 // ══════════════════════════════════════════════
 // DATA
@@ -1174,6 +1175,8 @@ async function handleSignout() {
   await sb.auth.signOut();
   currentUser = null; currentProfile = null;
   userCompletions = {}; otherUserCompletions = {};
+  if(clockInterval) clearInterval(clockInterval);
+  if(fullRenderInterval) clearInterval(fullRenderInterval);
   document.getElementById('app').style.display = 'none';
   document.getElementById('authScreen').style.display = 'flex';
 }
@@ -1420,11 +1423,11 @@ function renderDaily() {
       actionHtml=`<button class="btn-late" style="color:var(--blue);border-color:var(--blue);" onclick="completeTask('${task.id}','${dk}','upcoming')">MARK AS COMPLETED EARLY</button>`;
     } else if(status==='pending'&&ws==='open'){
       const closeTime=task.time+task.window;
-      const minsLeft=closeTime-nowMins();
-      const pctLeft=(minsLeft/task.window)*100;
+      const minsLeft=Math.max(0,closeTime-nowMins());
+      const pctLeft=Math.max(0,(minsLeft/task.window)*100);
       actionHtml=`
-        <div class="countdown-bar"><div class="countdown-fill" style="width:${Math.max(0,pctLeft)}%"></div></div>
-        <div class="countdown-text">Window closes in ${Math.max(0,minsLeft)} min · ${fmtTime(closeTime)}</div>
+        <div class="countdown-bar"><div class="countdown-fill" id="cd-bar-${task.id}" style="width:${pctLeft}%"></div></div>
+        <div class="countdown-text" id="cd-text-${task.id}">Window closes in ${minsLeft} min · ${fmtTime(closeTime)}</div>
         <button class="btn-complete" onclick="completeTask('${task.id}','${dk}','open')">✓ MARK COMPLETE</button>
       `;
     } else if((status==='pending'&&ws==='expired')||status==='missed'){
@@ -1997,9 +2000,42 @@ async function initApp(user) {
   updateOnlineStatus();
   renderDaily();
 
-  // Clock — auto-mark missed every minute
+  // Every 10s: update countdown bars in-place (lightweight)
+  function updateCountdownBars() {
+    const now = nowMins();
+    const dk = todayKey();
+    const dt = dayType();
+    const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
+    const comp = userCompletions[dk] || {};
+
+    tasks.forEach(task => {
+      const status = comp[task.id] || 'pending';
+      const ws = getWindowStatus(task);
+
+      if (status === 'pending' && ws === 'open') {
+        const closeTime = task.time + task.window;
+        const minsLeft = Math.max(0, closeTime - now);
+        const pctLeft = Math.max(0, (minsLeft / task.window) * 100);
+
+        const bar = document.getElementById('cd-bar-' + task.id);
+        const text = document.getElementById('cd-text-' + task.id);
+
+        if (bar) bar.style.width = pctLeft + '%';
+        if (text) text.textContent = 'Window closes in ' + minsLeft + ' min · ' + fmtTime(closeTime);
+
+        if (minsLeft === 0) renderDaily();
+      }
+    });
+  }
+
   if(clockInterval) clearInterval(clockInterval);
-  clockInterval = setInterval(async()=>{
+  clockInterval = setInterval(()=>{
+    if(currentTab==='daily') updateCountdownBars();
+  }, 10000);
+
+  // Every 60s: full re-render + auto-mark missed
+  if(fullRenderInterval) clearInterval(fullRenderInterval);
+  fullRenderInterval = setInterval(async()=>{
     await autoMarkMissed();
     if(currentTab==='daily') renderDaily();
   }, 60000);
@@ -2016,6 +2052,7 @@ sb.auth.onAuthStateChange(async(event, session)=>{
     document.getElementById('app').style.display='none';
     document.getElementById('authScreen').style.display='flex';
     if(clockInterval) clearInterval(clockInterval);
+    if(fullRenderInterval) clearInterval(fullRenderInterval);
   }
 });
 </script>
