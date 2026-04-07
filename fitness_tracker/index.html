@@ -3,32 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Blueprint — Fitness Tracker</title>
+<title>Vitalus OS — Longevity Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --bg: #080a0d;
-    --bg2: #0f1218;
-    --card: #141820;
-    --border: #1e2530;
-    --border2: #252e3d;
-    --accent: #c8f03c;
-    --accent-dim: rgba(200,240,60,0.12);
-    --accent-glow: rgba(200,240,60,0.25);
-    --green: #3cf0a0;
-    --green-dim: rgba(60,240,160,0.12);
-    --blue: #3ca8f0;
-    --blue-dim: rgba(60,168,240,0.12);
-    --orange: #f0843c;
-    --orange-dim: rgba(240,132,60,0.12);
-    --red: #f03c3c;
-    --red-dim: rgba(240,60,60,0.12);
-    --pink: #f03ca8;
-    --pink-dim: rgba(240,60,168,0.12);
-    --text: #dde2ec;
-    --muted: #5a6478;
-    --muted2: #3a4256;
+    --bg: #060d10;
+    --bg2: #0a1520;
+    --card: #0c1c24;
+    --border: #122430;
+    --border2: #1a3040;
+    --accent: #2ee8c8;
+    --accent-dim: rgba(46,232,200,0.12);
+    --accent-glow: rgba(46,232,200,0.25);
+    --green: #2ee8c8;
+    --green-dim: rgba(46,232,200,0.12);
+    --blue: #40a8e8;
+    --blue-dim: rgba(64,168,232,0.12);
+    --orange: #e89040;
+    --orange-dim: rgba(232,144,64,0.12);
+    --red: #e84040;
+    --red-dim: rgba(232,64,64,0.12);
+    --pink: #e840a8;
+    --pink-dim: rgba(232,64,168,0.12);
+    --gold: #e8c040;
+    --gold-dim: rgba(232,192,64,0.12);
+    --text: #d8eae8;
+    --muted: #4a6870;
+    --muted2: #1e3840;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -174,8 +176,8 @@
 
   .nav-logo {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
+    font-size: 20px;
+    letter-spacing: 3px;
     color: var(--accent);
   }
 
@@ -279,14 +281,14 @@
     position: absolute;
     top: 0; left: 0;
     width: 3px; height: 100%;
-    background: var(--accent);
+    background: var(--gold);
   }
 
   .streak-num {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 48px;
     letter-spacing: 2px;
-    color: var(--accent);
+    color: var(--gold);
     line-height: 1;
   }
 
@@ -339,7 +341,7 @@
   .ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
   .ring-svg { transform: rotate(-90deg); }
   .ring-bg { fill: none; stroke: var(--border2); stroke-width: 6; }
-  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .ring-fill { fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
 
   .ring-center {
     position: absolute; inset: 0;
@@ -347,7 +349,7 @@
     align-items: center; justify-content: center;
   }
 
-  .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
+  .ring-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: var(--gold); line-height: 1; }
   .ring-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
   .ring-info { flex: 1; }
   .ring-info-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px; margin-bottom: 8px; }
@@ -378,7 +380,7 @@
   }
 
   .task-item.active-task { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
-  .task-item.done-task { opacity: 0.55; }
+  .task-item.done-task { opacity: 0.55; border-color: var(--accent); }
   .task-item.missed-task { border-color: var(--red); opacity: 0.7; }
   .task-item.late-task { border-color: var(--orange); }
   .task-item.early-task { border-color: var(--blue); opacity: 0.7; }
@@ -573,11 +575,11 @@
   .couples-grid { margin: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .couple-card { background: var(--card); border: 1px solid var(--border); padding: 20px; text-align: center; }
-  .couple-card.steve { border-top: 3px solid var(--accent); }
+  .couple-card.steve { border-top: 3px solid var(--gold); }
   .couple-card.bekky { border-top: 3px solid var(--pink); }
 
   .couple-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; margin-bottom: 4px; }
-  .couple-name.steve { color: var(--accent); }
+  .couple-name.steve { color: var(--gold); }
   .couple-name.bekky { color: var(--pink); }
 
   .couple-streak { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 1px; line-height: 1; }
@@ -682,14 +684,16 @@
 
 <!-- LOADING -->
 <div class="loading" id="loading">
-  <div class="loading-logo">BLUEPRINT</div>
+  <div class="loading-logo">VITALUS</div>
+  <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:24px;">OS</div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
 </div>
 
 <!-- AUTH -->
 <div class="auth-screen" id="authScreen" style="display:none">
-  <div class="auth-logo">BLUEPRINT</div>
-  <div class="auth-sub">Fitness · Nutrition · Recovery</div>
+  <div class="auth-logo">VITALUS</div>
+  <div style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;">OS</div>
+  <div class="auth-sub">Longevity · Vitality · Balance</div>
 
   <div class="auth-card">
     <div class="auth-tabs">
@@ -736,7 +740,7 @@
 <div class="app" id="app">
 
   <div class="nav">
-    <div class="nav-logo">BLUEPRINT</div>
+    <div class="nav-logo">VITALUS <span style="font-size:11px;letter-spacing:2px;color:var(--muted);vertical-align:super;">OS</span></div>
     <div class="nav-right">
       <div>
         <div class="nav-user" id="navUser"></div>
@@ -810,7 +814,7 @@
 
       <div class="vs-banner">
         <div class="vs-streak">
-          <div class="vs-streak-num" id="vsStreakSteve" style="color:var(--accent)">—</div>
+          <div class="vs-streak-num" id="vsStreakSteve" style="color:var(--gold)">—</div>
           <div class="vs-streak-name" id="vsNameMe">Me</div>
         </div>
         <div class="vs-text">VS</div>
@@ -826,11 +830,11 @@
           <div class="couple-ring">
             <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border2)" stroke-width="5"/>
-              <circle id="coupleRingSteve" cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" style="transition:stroke-dashoffset 0.8s"/>
+              <circle id="coupleRingSteve" cx="40" cy="40" r="34" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" style="transition:stroke-dashoffset 0.8s"/>
             </svg>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)" id="couplePctSteve">0%</div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)" id="couplePctSteve">0%</div>
           </div>
-          <div class="couple-pct">Today: <span id="coupleTasksSteve" style="color:var(--accent)">—</span></div>
+          <div class="couple-pct">Today: <span id="coupleTasksSteve" style="color:var(--gold)">—</span></div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;" id="coupleGoalMe">—</div>
         </div>
 
@@ -1930,7 +1934,7 @@ async function loadMetricsHistory() {
     <div class="metrics-entry">
       <div class="metrics-entry-date">${row.date}</div>
       <div class="metrics-entry-vals">
-        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--accent)">${row.weight_lbs}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
+        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--gold)">${row.weight_lbs}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
         ${row.ftp_watts?`<div><div class="metrics-entry-val" style="color:var(--green)">${row.ftp_watts}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">WATTS</div></div>`:''}
         ${row.body_fat_pct?`<div><div class="metrics-entry-val" style="color:var(--blue)">${row.body_fat_pct}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">BF%</div></div>`:''}
       </div>
