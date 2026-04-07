@@ -181,6 +181,15 @@
 
   .nav-right { display: flex; align-items: center; gap: 12px; }
 
+  .nav-online-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+  .nav-online-dot.offline { background: var(--red); }
+
   .nav-user {
     font-family: 'DM Mono', monospace;
     font-size: 12px;
@@ -733,6 +742,7 @@
         <div class="nav-user" id="navUser"></div>
         <div id="navDayType" class="nav-day-type"></div>
       </div>
+      <div class="nav-online-dot" id="onlineDot" title="Online"></div>
       <button class="nav-signout" onclick="handleSignout()">OUT</button>
     </div>
   </div>
@@ -1011,6 +1021,42 @@ function localDateKey(d = new Date()) {
   return d.toLocaleDateString('en-CA', { timeZone: TZ });
 }
 
+// ── RETRY ──────────────────────────────────────
+async function withRetry(fn, retries=3, delayMs=1000) {
+  let lastErr;
+  for (let i=0; i<retries; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, delayMs));
+    try {
+      const result = await fn();
+      if (!result?.error) return result;
+      lastErr = result.error;
+    } catch(e) { lastErr = e; }
+  }
+  return { data: null, error: lastErr };
+}
+
+// ── COMPLETIONS CACHE ──────────────────────────
+const cacheKey = uid => `bp_completions_${uid}`;
+
+function loadCachedCompletions(userId) {
+  try { const r = localStorage.getItem(cacheKey(userId)); return r ? JSON.parse(r) : null; }
+  catch { return null; }
+}
+
+function saveCompletionsCache(userId, completions) {
+  try { localStorage.setItem(cacheKey(userId), JSON.stringify(completions)); } catch {}
+}
+
+// ── ONLINE / OFFLINE ───────────────────────────
+function updateOnlineStatus() {
+  const dot = document.getElementById('onlineDot');
+  if (!dot) return;
+  dot.classList.toggle('offline', !navigator.onLine);
+  dot.title = navigator.onLine ? 'Online' : 'Offline';
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
 function todayKey(offset=0) {
   const d = new Date(); d.setDate(d.getDate()+offset);
   return localDateKey(d);
@@ -1136,10 +1182,12 @@ async function loadUserData(userId) {
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
   const from = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: TZ });
 
-  const { data } = await sb.from('task_completions')
-    .select('*')
-    .eq('user_id', userId)
-    .gte('date', from);
+  const { data } = await withRetry(() =>
+    sb.from('task_completions')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', from)
+  );
 
   const completions = {};
   if (data) {
@@ -1157,10 +1205,12 @@ async function loadOtherUserData() {
 
   if (!partnerId) {
     // Check for a couple link in DB
-    const { data: links } = await sb.from('couple_links')
-      .select('user_a, user_b')
-      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
-      .limit(1);
+    const { data: links } = await withRetry(() =>
+      sb.from('couple_links')
+        .select('user_a, user_b')
+        .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+        .limit(1)
+    );
     if (links && links.length > 0) {
       partnerId = links[0].user_a === currentUser.id ? links[0].user_b : links[0].user_a;
       linkedPartnerId = partnerId;
@@ -1168,7 +1218,7 @@ async function loadOtherUserData() {
   }
 
   // Fallback: find any other profile if no link exists yet
-  const { data: profiles } = await sb.from('profiles').select('id,name');
+  const { data: profiles } = await withRetry(() => sb.from('profiles').select('id,name'));
   let partner = partnerId
     ? profiles?.find(p => p.id === partnerId)
     : profiles?.find(p => p.id !== currentUser.id);
@@ -1178,10 +1228,12 @@ async function loadOtherUserData() {
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
   const from = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: TZ });
 
-  const { data } = await sb.from('task_completions')
-    .select('*')
-    .eq('user_id', partner.id)
-    .gte('date', from);
+  const { data } = await withRetry(() =>
+    sb.from('task_completions')
+      .select('*')
+      .eq('user_id', partner.id)
+      .gte('date', from)
+  );
 
   const completions = {};
   if (data) {
@@ -1194,22 +1246,24 @@ async function loadOtherUserData() {
 }
 
 async function saveCompletion(taskId, status, dateKey) {
-  const userId = currentUser.id;
-  const { error } = await sb.from('task_completions')
-    .upsert({ user_id:userId, date:dateKey, task_id:taskId, status }, { onConflict:'user_id,date,task_id' });
-  if (error) { showToast('Save error — check connection','red'); return false; }
-  if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
-  userCompletions[dateKey][taskId] = status;
+  const { error } = await withRetry(() =>
+    sb.from('task_completions')
+      .upsert({ user_id:currentUser.id, date:dateKey, task_id:taskId, status }, { onConflict:'user_id,date,task_id' })
+  );
+  if (error) { showToast('Save error — check connection', 'red'); return false; }
   return true;
 }
 
 async function deleteCompletion(taskId, dateKey) {
-  await sb.from('task_completions')
-    .delete()
-    .eq('user_id', currentUser.id)
-    .eq('date', dateKey)
-    .eq('task_id', taskId);
-  if (userCompletions[dateKey]) delete userCompletions[dateKey][taskId];
+  const { error } = await withRetry(() =>
+    sb.from('task_completions')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('date', dateKey)
+      .eq('task_id', taskId)
+  );
+  if (error) { showToast('Undo error — check connection', 'red'); return false; }
+  return true;
 }
 
 // ══════════════════════════════════════════════
@@ -1224,6 +1278,9 @@ async function autoMarkMissed() {
     const status = taskStatus(task.id, dk);
     const closeTime = task.time + task.window;
     if (status === 'pending' && now > closeTime) {
+      if (!userCompletions[dk]) userCompletions[dk] = {};
+      userCompletions[dk][task.id] = 'missed';
+      saveCompletionsCache(currentUser.id, userCompletions);
       await saveCompletion(task.id, 'missed', dk);
     }
   }
@@ -1415,18 +1472,39 @@ async function quickComplete(taskId, dateKey) {
 
 async function completeTask(taskId, dateKey, ws) {
   const statusToSave = ws==='upcoming' ? 'early' : ws==='expired' ? 'late' : 'done';
-  const ok=await saveCompletion(taskId,statusToSave,dateKey);
-  if(!ok) return;
   const msg = statusToSave==='early' ? '✓ Completed early!' : statusToSave==='late' ? '✓ Marked late — still counts!' : '✓ Task complete!';
   const col = statusToSave==='early' ? 'blue' : statusToSave==='late' ? 'orange' : '';
-  showToast(msg, col);
+  const prev = userCompletions[dateKey]?.[taskId];
+  // Optimistic: update state + render immediately
+  if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
+  userCompletions[dateKey][taskId] = statusToSave;
+  saveCompletionsCache(currentUser.id, userCompletions);
   renderDaily();
+  showToast(msg, col);
+  // Background save — revert if it fails
+  const ok = await saveCompletion(taskId, statusToSave, dateKey);
+  if (!ok) {
+    prev === undefined ? delete userCompletions[dateKey][taskId] : (userCompletions[dateKey][taskId] = prev);
+    saveCompletionsCache(currentUser.id, userCompletions);
+    renderDaily();
+  }
 }
 
 async function undoTask(taskId, dateKey) {
-  await deleteCompletion(taskId, dateKey);
-  showToast('Unmarked ↩','orange');
+  const prev = userCompletions[dateKey]?.[taskId];
+  // Optimistic: update state + render immediately
+  if (userCompletions[dateKey]) delete userCompletions[dateKey][taskId];
+  saveCompletionsCache(currentUser.id, userCompletions);
   renderDaily();
+  showToast('Unmarked ↩', 'orange');
+  // Background delete — revert if it fails
+  const ok = await deleteCompletion(taskId, dateKey);
+  if (!ok && prev !== undefined) {
+    if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
+    userCompletions[dateKey][taskId] = prev;
+    saveCompletionsCache(currentUser.id, userCompletions);
+    renderDaily();
+  }
 }
 
 function renderMeals(containerId, dayOffset) {
@@ -1653,16 +1731,18 @@ let linkedPartnerId = null;
 
 async function checkExistingLink() {
   // Check if current user already has a couple link
-  const { data } = await sb.from('couple_links')
-    .select('*, user_a, user_b')
-    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
-    .limit(1);
+  const { data } = await withRetry(() =>
+    sb.from('couple_links')
+      .select('*, user_a, user_b')
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+      .limit(1)
+  );
 
   if (data && data.length > 0) {
     const link = data[0];
     linkedPartnerId = link.user_a === currentUser.id ? link.user_b : link.user_a;
     // Get partner name
-    const { data: profile } = await sb.from('profiles').select('name').eq('id', linkedPartnerId).single();
+    const { data: profile } = await withRetry(() => sb.from('profiles').select('name').eq('id', linkedPartnerId).single());
     if (profile) {
       showPartnerLinked(profile.name);
     }
@@ -1697,7 +1777,7 @@ async function linkPartner() {
   if (email === currentUser.email?.toLowerCase()) { errEl.textContent = 'You cannot link to yourself.'; return; }
 
   // Find partner profile by email via auth — look up by matching profiles
-  const { data: profiles } = await sb.from('profiles').select('id, name');
+  const { data: profiles } = await withRetry(() => sb.from('profiles').select('id, name'));
   // Find the user in auth.users — we match via a helper: get all users and find by email
   // Since we can't query auth.users directly from client, we use a workaround:
   // Store email in profiles table OR match by having the partner sign in and share their user ID
@@ -1709,10 +1789,12 @@ async function linkPartner() {
   // The cleanest no-RPC solution: add email to profiles table
 
   // Check couple_links — maybe partner already sent a link request
-  const { data: existingLink } = await sb.from('couple_links')
-    .select('*')
-    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
-    .limit(1);
+  const { data: existingLink } = await withRetry(() =>
+    sb.from('couple_links')
+      .select('*')
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+      .limit(1)
+  );
 
   if (existingLink && existingLink.length > 0) {
     errEl.textContent = 'You already have a linked partner. Unlink first to change.';
@@ -1722,11 +1804,13 @@ async function linkPartner() {
   // Find partner profile — we store email in a new field
   // For now, find any profile that isn't the current user and matches the email input
   // We'll use a pending_links table approach: store the email, and when partner logs in they auto-link
-  const { error } = await sb.from('partner_requests').insert({
-    from_user_id: currentUser.id,
-    to_email: email,
-    status: 'pending'
-  });
+  const { error } = await withRetry(() =>
+    sb.from('partner_requests').insert({
+      from_user_id: currentUser.id,
+      to_email: email,
+      status: 'pending'
+    })
+  );
 
   if (error) {
     // Table may not exist yet — show instructions
@@ -1740,9 +1824,11 @@ async function linkPartner() {
 }
 
 async function unlinkPartner() {
-  await sb.from('couple_links')
-    .delete()
-    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`);
+  await withRetry(() =>
+    sb.from('couple_links')
+      .delete()
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+  );
   linkedPartnerId = null;
   // Reset UI
   const title = document.getElementById('partnerLinkTitle');
@@ -1762,31 +1848,32 @@ async function unlinkPartner() {
 
 async function checkAndAutoLink() {
   // When a user opens the app, check if someone has sent them a partner request
-  const { data: requests } = await sb.from('partner_requests')
-    .select('*')
-    .eq('to_email', currentUser.email)
-    .eq('status', 'pending')
-    .limit(1);
+  const { data: requests } = await withRetry(() =>
+    sb.from('partner_requests')
+      .select('*')
+      .eq('to_email', currentUser.email)
+      .eq('status', 'pending')
+      .limit(1)
+  );
 
   if (!requests || requests.length === 0) return;
 
   const req = requests[0];
   // Check they're not already linked
-  const { data: existing } = await sb.from('couple_links')
-    .select('*')
-    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
-    .limit(1);
+  const { data: existing } = await withRetry(() =>
+    sb.from('couple_links')
+      .select('*')
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+      .limit(1)
+  );
 
   if (existing && existing.length > 0) return;
 
   // Create the couple link
-  await sb.from('couple_links').insert({
-    user_a: req.from_user_id,
-    user_b: currentUser.id
-  });
+  await withRetry(() => sb.from('couple_links').insert({ user_a: req.from_user_id, user_b: currentUser.id }));
 
   // Mark request as accepted
-  await sb.from('partner_requests').update({ status: 'accepted' }).eq('id', req.id);
+  await withRetry(() => sb.from('partner_requests').update({ status: 'accepted' }).eq('id', req.id));
 
   linkedPartnerId = req.from_user_id;
   showToast('✓ Partner linked automatically!');
@@ -1803,14 +1890,16 @@ async function logMetrics() {
 
   if (!weight && !ftp && !bf) { showToast('Enter at least one metric','orange'); return; }
 
-  const { error } = await sb.from('metrics').insert({
-    user_id: currentUser.id,
-    date: todayKey(),
-    weight_lbs: weight||null,
-    ftp_watts: ftp||null,
-    body_fat_pct: bf||null,
-    notes: notes||null
-  });
+  const { error } = await withRetry(() =>
+    sb.from('metrics').insert({
+      user_id: currentUser.id,
+      date: todayKey(),
+      weight_lbs: weight||null,
+      ftp_watts: ftp||null,
+      body_fat_pct: bf||null,
+      notes: notes||null
+    })
+  );
 
   if (error) { showToast('Error saving metrics','red'); return; }
 
@@ -1823,11 +1912,13 @@ async function logMetrics() {
 }
 
 async function loadMetricsHistory() {
-  const { data } = await sb.from('metrics')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('date', { ascending:false })
-    .limit(10);
+  const { data } = await withRetry(() =>
+    sb.from('metrics')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending:false })
+      .limit(10)
+  );
 
   const el = document.getElementById('metricsHistory');
   if (!data||data.length===0) {
@@ -1868,17 +1959,29 @@ function switchTab(tab) {
 async function initApp(user) {
   currentUser = user;
 
-  // Load profile
-  const { data:profile } = await sb.from('profiles').select('*').eq('id',user.id).single();
-  currentProfile = profile;
+  // Render from cache immediately while network loads
+  const cached = loadCachedCompletions(user.id);
+  if (cached) {
+    userCompletions = cached;
+    document.getElementById('loading').style.display='none';
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    renderDaily();
+  }
 
-  // Load completions
-  userCompletions = await loadUserData(user.id);
+  // Load profile and completions in parallel
+  const [profileResult, freshCompletions] = await Promise.all([
+    withRetry(() => sb.from('profiles').select('*').eq('id', user.id).single()),
+    loadUserData(user.id)
+  ]);
+  currentProfile = profileResult.data;
+  userCompletions = freshCompletions;
+  saveCompletionsCache(user.id, userCompletions);
 
   // Auto-mark missed
   await autoMarkMissed();
 
-  // Show app
+  // Show app (if not already shown via cache)
   document.getElementById('loading').style.display='none';
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -1887,6 +1990,7 @@ async function initApp(user) {
   await checkExistingLink();
   await checkAndAutoLink();
 
+  updateOnlineStatus();
   renderDaily();
 
   // Clock — auto-mark missed every minute
