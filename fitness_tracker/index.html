@@ -301,10 +301,10 @@
     margin-top: 2px;
   }
 
-  .streak-dots { display: flex; gap: 6px; align-items: center; }
+  .streak-dots { display: flex; gap: 6px; align-items: center; margin-top: 14px; }
 
   .streak-dot {
-    width: 44px; height: 44px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     border: 2px solid var(--border2);
     display: flex;
@@ -313,15 +313,45 @@
     font-family: 'DM Mono', monospace;
     font-size: 12px;
     color: var(--muted);
-    flex-direction: column;
-    gap: 1px;
     flex-shrink: 0;
+    position: relative;
   }
 
-  .streak-dot.done { background: var(--green); border-color: var(--green); color: var(--bg); }
-  .streak-dot.partial { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
-  .streak-dot.inprogress { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); animation: pulse-border 2s infinite; }
-  .streak-dot.today { border-color: var(--accent); color: var(--accent); }
+  .streak-dot.done {
+    background: #2db584;
+    border-color: #2db584;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(45,181,132,0.4);
+  }
+
+  .streak-dot.done::before {
+    content: '✓';
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #2db584;
+    font-weight: bold;
+  }
+
+  .streak-dot.inprogress {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+    animation: pulse-border 2s infinite;
+  }
+
+  .streak-dot.partial {
+    background: var(--orange-dim);
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .streak-dot.today {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
   @keyframes pulse-border {
     0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
@@ -805,6 +835,11 @@
         <div class="stat-box"><div class="stat-val" id="statDone" style="color:var(--green)">0</div><div class="stat-label">Done</div></div>
         <div class="stat-box"><div class="stat-val" id="statMissed" style="color:var(--red)">0</div><div class="stat-label">Missed</div></div>
       </div>
+      <div style="display:flex;justify-content:center;margin:0 16px 8px;">
+        <button onclick="openShoppingList()" style="padding:12px 28px;background:transparent;border:2px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">
+          🛒 WEEKLY SHOPPING LIST
+        </button>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 16px 16px;">
         <div>
           <div class="section-label" style="padding:12px 0 8px;">MEALS THIS WEEK</div>
@@ -813,7 +848,6 @@
         <div>
           <div class="section-label" style="padding:12px 0 8px;">INGREDIENTS BY DAY</div>
           <div id="weekIngredients"></div>
-          <button class="btn-log" onclick="generateShoppingList()" style="margin-top:8px;width:100%;">🛒 SHOPPING LIST</button>
         </div>
       </div>
     </div>
@@ -1379,11 +1413,7 @@ function renderDaily() {
     else if(done>0) cls='partial';
     const dot=document.createElement('div');
     dot.className='streak-dot '+cls;
-    if(allDone){
-      dot.innerHTML=`<span style="font-size:18px;font-weight:bold;line-height:1">✓</span>`;
-    } else {
-      dot.innerHTML=`<span style="font-size:10px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span><span style="font-size:13px">${d.getDate()}</span>`;
-    }
+    dot.innerHTML=`<span style="font-size:11px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${!allDone?'<span style="font-size:12px">'+d.getDate()+'</span>':''}`;
     dotsEl.appendChild(dot);
   }
 
@@ -1661,10 +1691,172 @@ function render2Day() {
     const mw=document.createElement('div');
     mw.id='meals2d-'+offset;
     col.appendChild(mw);
-    renderMeals('meals2d-'+offset, offset);
 
     main.appendChild(col);
   });
+  // Render meals AFTER all containers are in the DOM
+  [0,1].forEach(offset=>{
+    renderMeals('meals2d-'+offset, offset);
+  });
+}
+
+// ══════════════════════════════════════════════
+// SHOPPING LIST
+// ══════════════════════════════════════════════
+function openShoppingList() {
+  const today = new Date();
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const weekMeals = {
+    monday:    { lunch: 'Smash Burger Bowl', dinner: 'Teriyaki Salmon + Jasmine Rice + Broccoli' },
+    tuesday:   { lunch: 'Burger Bowl Leftovers ♻', dinner: 'Teriyaki Salmon Leftovers ♻' },
+    wednesday: { lunch: 'Seared Tuna Steak Bowl', dinner: 'Turkey Meatballs + Zucchini Noodles' },
+    thursday:  { lunch: 'Tuna Bowl Leftovers ♻', dinner: 'Turkey Meatballs Leftovers ♻' },
+    friday:    { lunch: 'Grilled Salmon Caesar', dinner: 'Smash Burgers + Sweet Potato Fries' },
+    saturday:  { lunch: 'Salmon Caesar Leftovers ♻', dinner: 'Smash Burger Leftovers ♻' },
+    sunday:    { lunch: 'Chicken Lettuce Wraps', dinner: 'Pan-Seared White Fish + Roasted Veg + Quinoa' },
+  };
+
+  const shoppingList = {
+    '🥩 PROTEIN': [
+      '400g lean ground beef (×2 — Mon burger bowls + Fri smash burgers)',
+      '4× salmon fillets 200g (Mon teriyaki ×2 + Fri Caesar ×2)',
+      '500g ground turkey (Wed meatballs)',
+      '2× tuna steaks (Wed bowl)',
+      '2× white fish fillets — cod or barramundi (Sun)',
+      '2× chicken breasts (Sun wraps)',
+      'Turkey bacon — 2 packs',
+      'Eggs — 2 dozen',
+    ],
+    '🥦 PRODUCE': [
+      'Broccoli — 2 heads',
+      'Zucchini — 4 large (Wed noodles)',
+      'Romaine lettuce — 2 heads',
+      'Butter lettuce — 1 head (Sun wraps)',
+      'Cherry tomatoes',
+      'Cucumber — 2',
+      'Avocado — 4',
+      'Sweet potato — 4 large (Fri fries)',
+      'Spinach — 1 bag',
+      'Capsicum — 2',
+      'Seasonal roasted veg (Sun) — your choice',
+      'Banana — bunch',
+      'Blueberries',
+      'Mixed berries',
+      'Apple — 4',
+    ],
+    '🧀 DAIRY & REFRIGERATED': [
+      'Greek yogurt — 2 large tubs (500g+)',
+      'Cottage cheese — 1 large tub',
+      'Parmesan — block or grated',
+      'Feta — 1 block',
+      'String cheese — 1 pack',
+      'Butter',
+    ],
+    '🌾 PANTRY & DRY': [
+      'Jasmine rice — 1 bag',
+      'Brown rice — 1 bag',
+      'Quinoa — 1 bag (Sun)',
+      'Sourdough bread — 1 loaf',
+      'English muffins — 4',
+      'Brioche buns — 4 (Fri burgers)',
+      'Rice cakes',
+      'Granola',
+      'Almonds — small bag',
+      'Walnuts — small bag',
+      'Edamame — frozen bag',
+      'Crushed tomatoes — 1 can',
+      'Dill pickles',
+      'Croutons',
+    ],
+    '🫙 SAUCES & CONDIMENTS': [
+      'Soy sauce',
+      'Honey',
+      'Sesame oil',
+      'Sriracha',
+      'Mustard',
+      'Mayonnaise (Caesar dressing)',
+      'Worcestershire sauce',
+      'Rice vinegar',
+      'Hoisin sauce',
+      'Olive oil',
+      'Italian herbs',
+    ],
+    '💊 SUPPLEMENTS': [
+      'Magnesium Glycinate — CanPrev or Thorne (if running low)',
+      'Protein powder — check stock',
+      'Electrolytes — check stock',
+    ],
+    '🥛 SNACK ITEMS': [
+      'Protein powder',
+      'Peanut butter',
+    ],
+  };
+
+  const printWindow = window.open('', '_blank');
+  const weekStr = monday.toLocaleDateString('en-US', { month:'long', day:'numeric' });
+  const endDate = new Date(monday); endDate.setDate(monday.getDate()+6);
+  const endStr = endDate.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+
+  printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Vitalus OS — Shopping List</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Georgia',serif; padding:40px; color:#1a1a1a; max-width:800px; margin:0 auto; }
+    .header { border-bottom:3px solid #2db584; padding-bottom:20px; margin-bottom:30px; }
+    .logo { font-family:'Arial Black',sans-serif; font-size:28px; letter-spacing:4px; color:#2db584; }
+    .logo span { color:#e8c040; font-size:16px; }
+    .week-label { font-size:13px; color:#666; margin-top:6px; letter-spacing:1px; text-transform:uppercase; }
+    .section { margin-bottom:24px; break-inside:avoid; }
+    .section-title { font-size:15px; font-weight:bold; letter-spacing:1px; color:#2db584; border-bottom:1px solid #e0e0e0; padding-bottom:6px; margin-bottom:12px; text-transform:uppercase; }
+    .item { display:flex; align-items:flex-start; gap:10px; padding:5px 0; border-bottom:1px dotted #e8e8e8; font-size:14px; line-height:1.4; }
+    .checkbox { width:16px; height:16px; border:2px solid #2db584; flex-shrink:0; margin-top:2px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; }
+    .meal-plan { margin-bottom:30px; background:#f9f9f9; padding:16px 20px; border-left:4px solid #e8c040; }
+    .meal-plan-title { font-size:13px; font-weight:bold; letter-spacing:1px; color:#e8c040; text-transform:uppercase; margin-bottom:10px; }
+    .meal-row { display:flex; gap:12px; font-size:13px; padding:4px 0; border-bottom:1px dotted #ddd; }
+    .meal-day { font-weight:bold; width:80px; flex-shrink:0; color:#333; }
+    .meal-detail { color:#555; }
+    .footer { margin-top:40px; border-top:1px solid #e0e0e0; padding-top:16px; font-size:12px; color:#999; display:flex; justify-content:space-between; }
+    .print-btn { display:block; margin:20px auto; padding:12px 32px; background:#2db584; color:white; border:none; font-size:16px; letter-spacing:2px; cursor:pointer; font-family:Arial,sans-serif; font-weight:bold; }
+    @media print { .print-btn { display:none; } body { padding:20px; } }
+  </style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">🖨 PRINT LIST</button>
+  <div class="header">
+    <div class="logo">VITALUS <span>OS</span></div>
+    <div class="week-label">Weekly Shopping List · ${weekStr} – ${endStr}</div>
+  </div>
+  <div class="meal-plan">
+    <div class="meal-plan-title">🍽 This Week's Meal Plan</div>
+    ${Object.entries(weekMeals).map(([day,meals])=>`
+      <div class="meal-row">
+        <span class="meal-day">${day.charAt(0).toUpperCase()+day.slice(1)}</span>
+        <span class="meal-detail">L: ${meals.lunch} &nbsp;·&nbsp; D: ${meals.dinner}</span>
+      </div>`).join('')}
+  </div>
+  <div class="grid">
+    ${Object.entries(shoppingList).map(([category,items])=>`
+      <div class="section">
+        <div class="section-title">${category}</div>
+        ${items.map(item=>`
+          <div class="item"><div class="checkbox"></div><span>${item}</span></div>`).join('')}
+      </div>`).join('')}
+  </div>
+  <div class="footer">
+    <span>Generated by Vitalus OS</span>
+    <span>Printed: ${new Date().toLocaleDateString()}</span>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 PRINT LIST</button>
+</body>
+</html>`);
+  printWindow.document.close();
+  printWindow.focus();
 }
 
 // ══════════════════════════════════════════════
