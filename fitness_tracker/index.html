@@ -1005,12 +1005,22 @@ const MEALS = {
 // ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
-function todayKey(offset=0) {
-  const d = new Date(); d.setDate(d.getDate()+offset);
-  return d.toISOString().slice(0,10);
+const TZ = 'America/Vancouver';
+
+function localDateKey(d = new Date()) {
+  return d.toLocaleDateString('en-CA', { timeZone: TZ });
 }
 
-function nowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function todayKey(offset=0) {
+  const d = new Date(); d.setDate(d.getDate()+offset);
+  return localDateKey(d);
+}
+
+function nowMins() {
+  const parts = new Date().toLocaleTimeString('en-US', { timeZone: TZ, hour12: false, hour: '2-digit', minute: '2-digit' });
+  const [h, m] = parts.split(':').map(Number);
+  return h * 60 + m;
+}
 
 function fmtTime(mins) {
   const h=Math.floor(mins/60), m=mins%60, ap=h>=12?'PM':'AM', hh=h%12||12;
@@ -1124,7 +1134,7 @@ async function handleSignout() {
 async function loadUserData(userId) {
   // Load last 30 days of completions
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
-  const from = thirtyDaysAgo.toISOString().slice(0,10);
+  const from = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: TZ });
 
   const { data } = await sb.from('task_completions')
     .select('*')
@@ -1166,7 +1176,7 @@ async function loadOtherUserData() {
   if (!partner) return { completions: {}, name: null };
 
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
-  const from = thirtyDaysAgo.toISOString().slice(0,10);
+  const from = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: TZ });
 
   const { data } = await sb.from('task_completions')
     .select('*')
@@ -1228,7 +1238,7 @@ function calcStreak(completions) {
   // Check yesterday backwards — only count if ALL tasks completed
   d.setDate(d.getDate()-1);
   for (let i=0; i<60; i++) {
-    const key = d.toISOString().slice(0,10);
+    const key = d.toLocaleDateString('en-CA', { timeZone: TZ });
     const dt = DAY_TYPES[d.getDay()];
     const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp = completions[key]||{};
@@ -1275,8 +1285,8 @@ function renderDaily() {
   weekMon.setDate(todayDate.getDate() - (todayDow === 0 ? 6 : todayDow - 1));
   for (let i=0; i<7; i++) {
     const d = new Date(weekMon); d.setDate(weekMon.getDate()+i);
-    const key = d.toISOString().slice(0,10);
-    const todayKey2 = todayDate.toISOString().slice(0,10);
+    const key = d.toLocaleDateString('en-CA', { timeZone: TZ });
+    const todayKey2 = todayDate.toLocaleDateString('en-CA', { timeZone: TZ });
     const isFuture = d > todayDate && key !== todayKey2;
     const isToday = key === todayKey2;
     const {done,missed,total}=getDayCompletion(key,userCompletions);
@@ -1525,7 +1535,7 @@ function renderWeekly() {
 
   for(let i=0;i<7;i++){
     const d=new Date(monday); d.setDate(monday.getDate()+i);
-    const dk=d.toISOString().slice(0,10);
+    const dk=d.toLocaleDateString('en-CA', { timeZone: TZ });
     const dt=DAY_TYPES[d.getDay()];
     const {done,missed,total}=getDayCompletion(dk,userCompletions);
     weekDone+=done; weekMissed+=missed;
@@ -1551,7 +1561,7 @@ function renderWeekly() {
   overviewEl.innerHTML='';
   for(let i=0;i<7;i++){
     const d=new Date(monday); d.setDate(monday.getDate()+i);
-    const dk=d.toISOString().slice(0,10);
+    const dk=d.toLocaleDateString('en-CA', { timeZone: TZ });
     const dt=DAY_TYPES[d.getDay()];
     const comp=userCompletions[dk]||{};
     const tasks=TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
