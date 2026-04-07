@@ -304,7 +304,7 @@
   .streak-dots { display: flex; gap: 6px; align-items: center; }
 
   .streak-dot {
-    width: 32px; height: 32px;
+    width: 44px; height: 44px;
     border-radius: 50%;
     border: 2px solid var(--border2);
     display: flex;
@@ -318,7 +318,7 @@
     flex-shrink: 0;
   }
 
-  .streak-dot.done { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .streak-dot.done { background: var(--green); border-color: var(--green); color: var(--bg); }
   .streak-dot.partial { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
   .streak-dot.inprogress { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); animation: pulse-border 2s infinite; }
   .streak-dot.today { border-color: var(--accent); color: var(--accent); }
@@ -468,7 +468,7 @@
   .btn-late:active { background: var(--orange-dim); }
 
   /* ── MEAL CARDS ── */
-  .meal-card { margin: 0 16px 8px; background: var(--card); border: 1px solid var(--border); overflow: hidden; }
+  .meal-card { margin: 0 0 8px; background: var(--card); border: 1px solid var(--border); overflow: hidden; }
 
   .meal-card-header {
     padding: 12px 16px; border-bottom: 1px solid var(--border);
@@ -740,7 +740,7 @@
 <div class="app" id="app">
 
   <div class="nav">
-    <div class="nav-logo">VITALUS <span style="font-size:14px;letter-spacing:2px;color:var(--gold);vertical-align:super;">OS</span></div>
+    <div class="nav-logo" onclick="location.reload()" style="cursor:pointer">VITALUS <span style="font-size:14px;letter-spacing:2px;color:var(--gold);vertical-align:super;">OS</span></div>
     <div class="nav-right">
       <div>
         <div class="nav-user" id="navUser"></div>
@@ -785,14 +785,15 @@
       <div id="taskList"></div>
 
       <div class="section-label" style="margin-top:8px;">TODAY'S MEALS</div>
-      <div id="mealList"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 16px 16px;">
+        <div id="mealList"></div>
+        <div id="mealIngredients"></div>
+      </div>
     </div>
 
     <!-- 2-DAY -->
     <div class="view" id="view-2day">
-      <div class="two-day-grid" id="twoDayGrid"></div>
-      <div class="section-label">MEALS — TODAY & TOMORROW</div>
-      <div id="twoDayMeals"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px;" id="twoDayMain"></div>
     </div>
 
     <!-- WEEKLY -->
@@ -804,8 +805,17 @@
         <div class="stat-box"><div class="stat-val" id="statDone" style="color:var(--green)">0</div><div class="stat-label">Done</div></div>
         <div class="stat-box"><div class="stat-val" id="statMissed" style="color:var(--red)">0</div><div class="stat-label">Missed</div></div>
       </div>
-      <div class="section-label">THIS WEEK</div>
-      <div id="weeklyOverview"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 16px 16px;">
+        <div>
+          <div class="section-label" style="padding:12px 0 8px;">MEALS THIS WEEK</div>
+          <div id="weekMealsOverview"></div>
+        </div>
+        <div>
+          <div class="section-label" style="padding:12px 0 8px;">INGREDIENTS BY DAY</div>
+          <div id="weekIngredients"></div>
+          <button class="btn-log" onclick="generateShoppingList()" style="margin-top:8px;width:100%;">🛒 SHOPPING LIST</button>
+        </div>
+      </div>
     </div>
 
     <!-- TOGETHER -->
@@ -861,7 +871,13 @@
             <label class="form-label">Partner's Email</label>
             <input class="form-input" type="email" id="partnerEmail" placeholder="partner@email.com">
           </div>
-          <button class="btn-log" onclick="linkPartner()" style="margin-top:4px;">LINK PARTNER</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+            <button class="btn-log" onclick="linkPartner()">LINK EXISTING</button>
+            <button class="btn-log" onclick="invitePartner()" style="background:transparent;color:var(--gold);border-color:var(--gold);">SEND INVITE</button>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">
+            Already have an account? Use LINK EXISTING.<br>New to Vitalus OS? Use SEND INVITE.
+          </div>
           <div id="partnerLinkError" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;"></div>
         </div>
       </div>
@@ -1363,8 +1379,11 @@ function renderDaily() {
     else if(done>0) cls='partial';
     const dot=document.createElement('div');
     dot.className='streak-dot '+cls;
-    const checkmark = allDone ? '✓' : '';
-    dot.innerHTML=`<span style="font-size:11px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${checkmark?'<span style="font-size:13px;font-weight:bold">'+checkmark+'</span>':'<span style="font-size:12px">'+d.getDate()+'</span>'}`;
+    if(allDone){
+      dot.innerHTML=`<span style="font-size:18px;font-weight:bold;line-height:1">✓</span>`;
+    } else {
+      dot.innerHTML=`<span style="font-size:10px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span><span style="font-size:13px">${d.getDate()}</span>`;
+    }
     dotsEl.appendChild(dot);
   }
 
@@ -1459,6 +1478,8 @@ function renderDaily() {
   });
 
   renderMeals('mealList',0);
+  const todayDow2 = new Date().getDay();
+  renderDayIngredients('mealIngredients', todayDow2);
 }
 
 function toggleTask(taskId) {
@@ -1553,6 +1574,39 @@ function renderMeals(containerId, dayOffset) {
   });
 }
 
+function getMealIngredients(dow) {
+  const meals = MEALS[dow] || MEALS[0];
+  const order = ['breakfast','lunch','snack','dinner'];
+  const labels = {breakfast:'Breakfast',lunch:'Lunch',snack:'Snack',dinner:'Dinner'};
+  const groups = [];
+  order.forEach(key => {
+    const m = meals[key];
+    if (!m) return;
+    if (m.leftover) {
+      groups.push({ label: labels[key], items: ['Leftovers — no prep needed'], isLeftover: true });
+      return;
+    }
+    const raw = m.detail.split('·')[0]; // strip notes after ·
+    const items = raw.split(',').map(s => s.trim()).filter(s => s.length > 2);
+    if (items.length) groups.push({ label: labels[key], items, isLeftover: false });
+  });
+  return groups;
+}
+
+function renderDayIngredients(containerId, dow) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const groups = getMealIngredients(dow);
+  el.innerHTML = groups.map(g => `
+    <div style="background:var(--card);border:1px solid var(--border);margin-bottom:8px;overflow:hidden;">
+      <div style="padding:8px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;">${g.label}</div>
+      <div style="padding:8px 12px;">
+        ${g.items.map(item => `<div style="font-size:13px;color:${g.isLeftover?'var(--green)':'var(--text)'};padding:3px 0;display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted2);flex-shrink:0;">•</span>${item}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
 function toggleRecipe(id) {
   const el=document.getElementById(id);
   const arrow=document.getElementById(id+'-arrow');
@@ -1565,19 +1619,28 @@ function toggleRecipe(id) {
 // 2-DAY VIEW
 // ══════════════════════════════════════════════
 function render2Day() {
-  const grid=document.getElementById('twoDayGrid');
-  grid.innerHTML='';
+  const main=document.getElementById('twoDayMain');
+  main.innerHTML='';
   [0,1].forEach(offset=>{
     const dk=todayKey(offset);
     const dt=dayType(offset);
     const tasks=TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp=userCompletions[dk]||{};
     const label=offset===0?'Today':'Tomorrow';
+    const d=new Date(); d.setDate(d.getDate()+offset);
+    const dow=d.getDay();
+
     const col=document.createElement('div');
-    col.innerHTML=`<div class="two-day-header">${label}<span class="two-day-subhead">${dayName(offset).slice(0,3).toUpperCase()}</span>${getDayTypeLabel(dt)}</div>`;
+
+    // Header
+    const hdr=document.createElement('div');
+    hdr.className='two-day-header';
+    hdr.innerHTML=`${label}<span class="two-day-subhead">${dayName(offset).slice(0,3).toUpperCase()}</span>${getDayTypeLabel(dt)}`;
+    col.appendChild(hdr);
+
+    // Tasks
     tasks.forEach(task=>{
       const status=comp[task.id]||'pending';
-      const ws=getWindowStatus(task);
       let checkCls='',checkIcon='';
       if(status==='done'){checkCls='done';checkIcon='✓';}
       else if(status==='late'){checkCls='late';checkIcon='✓';}
@@ -1589,19 +1652,18 @@ function render2Day() {
       taskEl.innerHTML=`<div class="two-day-check ${checkCls}">${checkIcon}</div><div class="two-day-task-name">${task.icon} ${task.name}</div><div class="two-day-time">${fmtTime(task.time)}</div>`;
       col.appendChild(taskEl);
     });
-    grid.appendChild(col);
-  });
-  const mealsEl=document.getElementById('twoDayMeals');
-  mealsEl.innerHTML='';
-  [0,1].forEach(offset=>{
-    const lbl=document.createElement('div');
-    lbl.className='section-label';
-    lbl.textContent=offset===0?'TODAY':'TOMORROW';
-    mealsEl.appendChild(lbl);
-    const w=document.createElement('div');
-    w.id='meals2d-'+offset;
-    mealsEl.appendChild(w);
-    renderMeals('meals2d-'+offset,offset);
+
+    // Meals label + cards
+    const mlbl=document.createElement('div');
+    mlbl.style.cssText='font-family:"DM Mono",monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:12px 0 6px;';
+    mlbl.textContent='Meals';
+    col.appendChild(mlbl);
+    const mw=document.createElement('div');
+    mw.id='meals2d-'+offset;
+    col.appendChild(mw);
+    renderMeals('meals2d-'+offset, offset);
+
+    main.appendChild(col);
   });
 }
 
@@ -1642,41 +1704,72 @@ function renderWeekly() {
   document.getElementById('statDone').textContent=weekDone;
   document.getElementById('statMissed').textContent=weekMissed;
 
-  const overviewEl=document.getElementById('weeklyOverview');
-  overviewEl.innerHTML='';
+  // Left: meals overview
+  const mealsEl=document.getElementById('weekMealsOverview');
+  mealsEl.innerHTML='';
   for(let i=0;i<7;i++){
     const d=new Date(monday); d.setDate(monday.getDate()+i);
-    const dk=d.toLocaleDateString('en-CA', { timeZone: TZ });
-    const dt=DAY_TYPES[d.getDay()];
-    const comp=userCompletions[dk]||{};
-    const tasks=TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
-    const isToday=dk===todayKey();
-    const {done,total}=getDayCompletion(dk,userCompletions);
-    const dtColor=dt==='ride'?'var(--accent)':dt==='lift'?'var(--blue)':'var(--muted)';
+    const dow=d.getDay();
+    const isToday=d.toLocaleDateString('en-CA',{timeZone:TZ})===todayKey();
+    const meals=MEALS[dow]||MEALS[0];
+    const order=['breakfast','lunch','snack','dinner'];
+    const mealLabels={breakfast:'B',lunch:'L',snack:'S',dinner:'D'};
     const block=document.createElement('div');
-    block.style.cssText='margin:0 16px 10px;background:var(--card);border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';overflow:hidden;';
-    block.innerHTML=`
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-        <div>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:${isToday?'var(--accent)':'var(--text)'}">${days[d.getDay()]} ${d.getDate()}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${dtColor};margin-left:8px;letter-spacing:1px;">${dt.toUpperCase()}</span>
-        </div>
-        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${done}/${total} ▾</span>
-      </div>
-      <div style="display:${isToday?'block':'none'}">
-        ${tasks.map(t=>{
-          const s=comp[t.id]||'pending';
-          const ic=s==='done'||s==='late'||s==='early'?'✓':s==='missed'?'✗':'○';
-          const c=s==='done'?'var(--accent)':s==='early'?'var(--blue)':s==='late'?'var(--orange)':s==='missed'?'var(--red)':'var(--muted2)';
-          return `<div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
-            <span style="color:${c};font-size:12px;width:14px">${ic}</span>
-            <span style="font-size:12px;">${t.icon} ${t.name}</span>
-            <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${fmtTime(t.time)}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    `;
-    overviewEl.appendChild(block);
+    block.style.cssText='background:var(--card);border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';margin-bottom:6px;overflow:hidden;';
+    const hdr=`<div style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:${isToday?'var(--accent)':'var(--text)'};">${days[dow]} ${d.getDate()}</div>`;
+    const rows=order.map(key=>{
+      const m=meals[key]; if(!m) return '';
+      const leftover=m.leftover?` <span style="color:var(--green);font-size:10px;">♻</span>`:'';
+      const batch=m.batch?` <span style="color:var(--accent);font-size:10px;">★</span>`:'';
+      return `<div style="padding:4px 10px;font-size:12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;">${mealLabels[key]}</span>
+        <span style="color:var(--text);line-height:1.3;">${m.name}${leftover}${batch}</span>
+      </div>`;
+    }).join('');
+    block.innerHTML=hdr+rows;
+    mealsEl.appendChild(block);
+  }
+
+  // Right: ingredients by day
+  const ingEl=document.getElementById('weekIngredients');
+  ingEl.innerHTML='';
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const dow=d.getDay();
+    const isToday=d.toLocaleDateString('en-CA',{timeZone:TZ})===todayKey();
+    const groups=getMealIngredients(dow);
+    const allItems=[...new Set(groups.filter(g=>!g.isLeftover).flatMap(g=>g.items))];
+    if(!allItems.length) continue;
+    const block=document.createElement('div');
+    block.style.cssText='background:var(--card);border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';margin-bottom:6px;overflow:hidden;cursor:pointer;';
+    const hdr=`<div style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:${isToday?'var(--accent)':'var(--text)'};display:flex;justify-content:space-between;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">${days[dow]} ${d.getDate()}<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${allItems.length} items ▾</span></div>`;
+    const body=`<div style="display:${isToday?'block':'none'};padding:6px 10px;">${allItems.map(item=>`<div style="font-size:12px;color:var(--text);padding:2px 0;display:flex;gap:6px;"><span style="color:var(--muted2);">•</span>${item}</div>`).join('')}</div>`;
+    block.innerHTML=hdr+body;
+    ingEl.appendChild(block);
+  }
+}
+
+function generateShoppingList() {
+  const today=new Date();
+  const todayDow=today.getDay();
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-todayDow+(todayDow===0?-6:1));
+  const allItems=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const groups=getMealIngredients(d.getDay());
+    groups.filter(g=>!g.isLeftover).forEach(g=>g.items.forEach(item=>allItems.push(item)));
+  }
+  const unique=[...new Set(allItems)].sort();
+  const list=unique.join('\n');
+  // Try native share, fallback to copy
+  if(navigator.share){
+    navigator.share({ title:'Vitalus OS — Weekly Shopping List', text:list });
+  } else {
+    navigator.clipboard.writeText(list).then(()=>showToast('✓ Shopping list copied!')).catch(()=>{
+      // fallback: show in modal-ish toast
+      showToast('Copy failed — check browser permissions','orange');
+    });
   }
 }
 
@@ -1853,6 +1946,93 @@ async function unlinkPartner() {
   showToast('Partner unlinked', 'orange');
 }
 
+async function invitePartner() {
+  const email = document.getElementById('partnerEmail').value.trim().toLowerCase();
+  const errEl = document.getElementById('partnerLinkError');
+  errEl.textContent = '';
+  errEl.style.color = 'var(--red)';
+
+  if (!email) { errEl.textContent = 'Please enter an email address.'; return; }
+  if (email === currentUser.email?.toLowerCase()) {
+    errEl.textContent = 'You cannot invite yourself.';
+    return;
+  }
+
+  // Check if already linked
+  const { data: existing } = await withRetry(() =>
+    sb.from('couple_links')
+      .select('*')
+      .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+      .limit(1)
+  );
+  if (existing && existing.length > 0) {
+    errEl.textContent = 'You already have a linked partner. Unlink first.';
+    return;
+  }
+
+  // Check if this email already has an account
+  const { data: profiles } = await withRetry(() => sb.from('profiles').select('id, name'));
+  const existingUser = profiles?.find(p => p.id !== currentUser.id);
+
+  if (existingUser) {
+    const { error } = await withRetry(() =>
+      sb.from('couple_links').insert({ user_a: currentUser.id, user_b: existingUser.id })
+    );
+    if (error) { errEl.textContent = 'Error linking partner. Please try again.'; return; }
+    linkedPartnerId = existingUser.id;
+    showPartnerLinked(existingUser.name);
+    showToast('✓ Partner linked!');
+    return;
+  }
+
+  // User doesn't exist — store invite and show share options
+  const { error } = await withRetry(() =>
+    sb.from('partner_requests').upsert({
+      from_user_id: currentUser.id,
+      to_email: email,
+      status: 'pending'
+    }, { onConflict: 'from_user_id' })
+  );
+
+  if (error) { errEl.textContent = 'Error sending invite. Please try again.'; return; }
+
+  errEl.style.color = 'var(--accent)';
+  errEl.innerHTML = `✓ Invite sent to <strong>${email}</strong>.<br>
+    <span style="font-size:12px;opacity:0.8;">They'll receive an email to create their account. Once they sign up you'll be automatically linked.</span>`;
+
+  const shareUrl = window.location.origin + window.location.pathname + '?invite=' + encodeURIComponent(currentUser.id);
+  showInviteShareOptions(email, shareUrl);
+}
+
+function showInviteShareOptions(email, shareUrl) {
+  const content = document.getElementById('partnerLinkContent');
+  if (!content) return;
+  const shareHtml = `
+    <div style="margin-top:16px;padding:16px;background:var(--bg2);border:1px solid var(--border2);">
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;">SHARE SIGNUP LINK</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Share this link with your partner so they can create their account and be automatically linked to you:</div>
+      <div style="padding:10px 12px;background:var(--card);border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);word-break:break-all;margin-bottom:10px;">${shareUrl}</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="copyInviteLink('${shareUrl}')" style="flex:1;padding:10px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;">COPY LINK</button>
+        ${navigator.share ? `<button onclick="shareInviteLink('${shareUrl}')" style="flex:1;padding:10px;background:var(--accent);border:none;color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;">SHARE</button>` : ''}
+      </div>
+    </div>
+  `;
+  content.insertAdjacentHTML('beforeend', shareHtml);
+}
+
+function copyInviteLink(url) {
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('✓ Link copied!'))
+    .catch(() => showToast('Could not copy — copy it manually', 'orange'));
+}
+
+function shareInviteLink(url) {
+  if (navigator.share) {
+    navigator.share({ title: 'Join me on Vitalus OS', text: "I've invited you to track our health journey together on Vitalus OS.", url });
+  }
+}
+
 async function checkAndAutoLink() {
   // When a user opens the app, check if someone has sent them a partner request
   const { data: requests } = await withRetry(() =>
@@ -1996,6 +2176,23 @@ async function initApp(user) {
   // Check for existing partner link and auto-link from pending requests
   await checkExistingLink();
   await checkAndAutoLink();
+
+  // Handle invite deep link — ?invite=<userId>
+  const urlParams = new URLSearchParams(window.location.search);
+  const inviteFrom = urlParams.get('invite');
+  if (inviteFrom && inviteFrom !== currentUser.id) {
+    const { data: existingLink } = await withRetry(() =>
+      sb.from('couple_links')
+        .select('*')
+        .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+        .limit(1)
+    );
+    if (!existingLink || existingLink.length === 0) {
+      await withRetry(() => sb.from('couple_links').insert({ user_a: inviteFrom, user_b: currentUser.id }));
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast('✓ Automatically linked to your partner!');
+    }
+  }
 
   updateOnlineStatus();
   renderDaily();
