@@ -342,10 +342,38 @@
     animation: pulse-border 2s infinite;
   }
 
+  .streak-dot.missed {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .streak-dot.missed::before {
+    content: '✗';
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--red);
+    font-weight: bold;
+  }
+
   .streak-dot.partial {
     background: var(--orange-dim);
     border-color: var(--orange);
     color: var(--orange);
+  }
+
+  .streak-dot.partial::before {
+    content: '!';
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--orange);
+    font-weight: bold;
   }
 
   .streak-dot.today {
@@ -686,6 +714,159 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.orange { background: var(--orange); color: #fff; }
   .toast.red { background: var(--red); color: #fff; }
+
+  /* ── HISTORY MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 600px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+
+  .modal-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-body { padding: 16px; }
+
+  .modal-task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .modal-task-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .modal-task-name { flex: 1; font-size: 15px; font-weight: 500; }
+
+  .modal-task-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .modal-task-status {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .modal-summary {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .modal-summary-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .modal-summary-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .modal-summary-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
 
   /* ── LOADING ── */
   .loading {
@@ -1371,6 +1552,107 @@ function calcStreak(completions) {
 }
 
 // ══════════════════════════════════════════════
+// DAY HISTORY MODAL
+// ══════════════════════════════════════════════
+function openDayHistory(dateKey) {
+  const today = new Date();
+  const todayStr = localDateKey(today);
+  if (dateKey === todayStr) return;
+  const clickedDate = new Date(dateKey + 'T12:00:00');
+  if (clickedDate > today) return;
+
+  // Only allow current week
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  monday.setHours(0,0,0,0);
+  if (clickedDate < monday) return;
+
+  const dt = DAY_TYPES[clickedDate.getDay()] || 'rest';
+  const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
+  const comp = userCompletions[dateKey] || {};
+
+  const done = tasks.filter(t => comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early').length;
+  const missed = tasks.filter(t => comp[t.id]==='missed').length;
+  const pending = tasks.filter(t => !comp[t.id]||comp[t.id]==='pending').length;
+
+  const dayLabel = clickedDate.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const dtLabel = dt.charAt(0).toUpperCase() + dt.slice(1) + ' Day';
+
+  function getStatusDisplay(status) {
+    if (status === 'done')   return { icon:'✓', bg:'var(--accent)',    border:'var(--accent)',    textColor:'var(--bg)' };
+    if (status === 'early')  return { icon:'✓', bg:'var(--blue-dim)',  border:'var(--blue)',      textColor:'var(--blue)' };
+    if (status === 'late')   return { icon:'✓', bg:'var(--orange-dim)',border:'var(--orange)',    textColor:'var(--orange)' };
+    if (status === 'missed') return { icon:'✗', bg:'var(--red-dim)',   border:'var(--red)',       textColor:'var(--red)' };
+    return                          { icon:'○', bg:'transparent',       border:'var(--border2)', textColor:'var(--muted)' };
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'historyModal';
+  overlay.onclick = (e) => { if (e.target === overlay) closeDayHistory(); };
+
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">${dayLabel}</div>
+          <div class="modal-subtitle">${dtLabel} · ${done}/${tasks.length} completed</div>
+        </div>
+        <button class="modal-close" onclick="closeDayHistory()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-summary">
+          <div class="modal-summary-box">
+            <div class="modal-summary-val" style="color:var(--accent)">${done}</div>
+            <div class="modal-summary-label">Completed</div>
+          </div>
+          <div class="modal-summary-box">
+            <div class="modal-summary-val" style="color:var(--red)">${missed}</div>
+            <div class="modal-summary-label">Missed</div>
+          </div>
+          <div class="modal-summary-box">
+            <div class="modal-summary-val" style="color:var(--muted)">${pending}</div>
+            <div class="modal-summary-label">Skipped</div>
+          </div>
+        </div>
+        ${tasks.map(task => {
+          const status = comp[task.id] || 'pending';
+          const s = getStatusDisplay(status);
+          return `
+            <div class="modal-task-row">
+              <div class="modal-task-icon">${task.icon}</div>
+              <div class="modal-task-name">
+                ${task.name}
+                <div style="font-size:12px;color:var(--muted);margin-top:2px;">${task.desc}</div>
+              </div>
+              <div class="modal-task-time">${fmtTime(task.time)}</div>
+              <div class="modal-task-status" style="background:${s.bg};border-color:${s.border};color:${s.textColor}">${s.icon}</div>
+            </div>`;
+        }).join('')}
+        ${missed > 0 ? `
+          <div style="margin-top:16px;padding:14px;background:var(--red-dim);border:1px solid rgba(232,64,64,0.3);font-size:13px;color:var(--muted);line-height:1.6;">
+            💡 <strong style="color:var(--text)">${missed} task${missed>1?'s':''} missed.</strong>
+            These still count toward your history. Use the Today tab to mark future tasks as late.
+          </div>` : done === tasks.length ? `
+          <div style="margin-top:16px;padding:14px;background:var(--green-dim);border:1px solid rgba(45,181,132,0.3);font-size:13px;color:var(--accent);line-height:1.6;">
+            🏆 Perfect day — every task completed!
+          </div>` : ''}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDayHistory() {
+  const modal = document.getElementById('historyModal');
+  if (modal) modal.remove();
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════════
 // DAILY VIEW
 // ══════════════════════════════════════════════
 function renderDaily() {
@@ -1405,15 +1687,27 @@ function renderDaily() {
     const isToday = key === todayKey2;
     const {done,missed,total}=getDayCompletion(key,userCompletions);
     const allDone = done === total && total > 0 && missed === 0;
-    const inProgress = isToday && done > 0 && !allDone;
     let cls='';
-    if(allDone) cls='done';
-    else if(inProgress) cls='inprogress';
-    else if(isToday) cls='today';
-    else if(done>0) cls='partial';
+    if (isToday && done === 0) cls = 'today';
+    else if (isToday && allDone) cls = 'done';
+    else if (isToday && done > 0) cls = 'inprogress';
+    else if (isFuture) cls = '';
+    else if (allDone) cls = 'done';
+    else if (done === 0 && missed > 0) cls = 'missed';
+    else if (done > 0 && missed > 0) cls = 'partial';
+    else if (done > 0 && missed === 0) cls = 'done';
     const dot=document.createElement('div');
     dot.className='streak-dot '+cls;
-    dot.innerHTML=`<span style="font-size:11px;letter-spacing:0.5px">${dayLetters[d.getDay()].slice(0,1)}</span>${!allDone?'<span style="font-size:12px">'+d.getDate()+'</span>':''}`;
+    dot.innerHTML = allDone
+      ? `<span style="font-size:11px">${dayLetters[d.getDay()].slice(0,1)}</span>`
+      : `<span style="font-size:10px">${dayLetters[d.getDay()].slice(0,1)}</span><span style="font-size:10px">${d.getDate()}</span>`;
+    // Clickable for current week past days
+    const isClickableDay = !isFuture && !isToday;
+    if (isClickableDay) {
+      dot.style.cursor = 'pointer';
+      dot.title = 'View ' + d.toLocaleDateString('en-US',{weekday:'long'}) + ' history';
+      dot.onclick = () => openDayHistory(key);
+    }
     dotsEl.appendChild(dot);
   }
 
