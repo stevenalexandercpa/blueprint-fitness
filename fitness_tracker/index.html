@@ -301,7 +301,7 @@
     margin-top: 2px;
   }
 
-  .streak-dots { display: flex; gap: 6px; align-items: center; margin-top: 14px; }
+  .streak-dots { display: flex; gap: 6px; align-items: center; margin-top: 22px; }
 
   .streak-dot {
     width: 34px; height: 34px;
@@ -327,10 +327,10 @@
   .streak-dot.done::before {
     content: '✓';
     position: absolute;
-    top: -16px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 11px;
+    font-size: 12px;
     color: #2db584;
     font-weight: bold;
   }
@@ -349,12 +349,12 @@
   }
 
   .streak-dot.missed::before {
-    content: '✗';
+    content: '✕';
     position: absolute;
-    top: -16px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--red);
     font-weight: bold;
   }
@@ -366,12 +366,12 @@
   }
 
   .streak-dot.partial::before {
-    content: '!';
+    content: '✕';
     position: absolute;
-    top: -16px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--orange);
     font-weight: bold;
   }
