@@ -1413,15 +1413,9 @@ async function handleSignup() {
 }
 
 async function handleSignout() {
-  try {
-    if (clockInterval) clearInterval(clockInterval);
-    if (typeof fullRenderInterval !== 'undefined' && fullRenderInterval) clearInterval(fullRenderInterval);
-    await sb.auth.signOut();
-  } catch(e) {
-    console.error('Signout error:', e);
-  } finally {
-    window.location.reload();
-  }
+  async function handleSignout() {
+  await sb.auth.signOut();
+  window.location.href = window.location.href;
 }
 
 // ══════════════════════════════════════════════
