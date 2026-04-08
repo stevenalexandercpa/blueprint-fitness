@@ -932,7 +932,7 @@
 
   <div class="nav">
     <div class="nav-logo" onclick="location.reload()" style="cursor:pointer">VITALUS <span style="font-size:14px;letter-spacing:2px;color:var(--gold);vertical-align:super;">OS</span></div>
-    <div class="nav-right">
+    <div class="nav-right" id="navRight">
       <div>
         <div class="nav-user" id="navUser"></div>
         <div id="navDayType" class="nav-day-type"></div>
@@ -1077,9 +1077,13 @@
         </div>
       </div>
 
-      <div class="section-label" style="margin-top:8px;">LOG METRICS</div>
-      <div class="metrics-card">
-        <div class="metrics-title">// Track Your Numbers</div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="view" id="view-metrics">
+      <div class="section-label" style="padding-top:20px;">LOG METRICS</div>
+      <div class="metrics-card" style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;">// Track Your Numbers</div>
         <div class="metrics-row">
           <div class="metric-input-group">
             <label class="form-label">Weight (lbs)</label>
@@ -1100,18 +1104,15 @@
             <input class="form-input" type="text" id="metricNotes" placeholder="Optional">
           </div>
         </div>
-        <button class="btn-log" onclick="logMetrics()">LOG METRICS</button>
+        <button class="btn-log" onclick="logMetrics()" style="width:100%;padding:12px;background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;margin-top:4px;">LOG METRICS</button>
       </div>
 
-      <div class="section-label">METRIC HISTORY</div>
-      <div class="metrics-card">
-        <div id="metricsHistory"><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px;">No entries yet</div></div>
+      <div class="section-label">RECENT ENTRIES</div>
+      <div class="metrics-card" style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
+        <div id="metricsHistory"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No entries yet</div></div>
       </div>
-    </div>
 
-    <!-- METRICS -->
-    <div class="view" id="view-metrics">
-      <div class="section-label" style="padding-top:20px;">PROGRESS TRACKING</div>
+      <div class="section-label">PROGRESS TRACKING</div>
 
       <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px;">Weight</div>
@@ -1151,7 +1152,7 @@
       <span class="tab-icon">♡</span><span>Together</span>
     </button>
     <button class="tab" onclick="switchTab('metrics')" id="tab-metrics">
-      <span class="tab-icon">📈</span><span>Metrics</span>
+      <span class="tab-icon">⟋</span><span>Metrics</span>
     </button>
   </div>
 
@@ -1413,55 +1414,13 @@ async function handleSignup() {
 
 async function handleSignout() {
   try {
-    // Clear all intervals first
-    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
-    if (typeof fullRenderInterval !== 'undefined' && fullRenderInterval) {
-      clearInterval(fullRenderInterval); fullRenderInterval = null;
-    }
-
-    // Reset all state
-    currentUser = null;
-    currentProfile = null;
-    userCompletions = {};
-    otherUserCompletions = {};
-    linkedPartnerId = null;
-
-    // Clear any open modals
-    const modal = document.getElementById('historyModal');
-    if (modal) modal.remove();
-    document.body.style.overflow = '';
-
-    // Sign out from Supabase
+    if (clockInterval) clearInterval(clockInterval);
+    if (typeof fullRenderInterval !== 'undefined' && fullRenderInterval) clearInterval(fullRenderInterval);
     await sb.auth.signOut();
-
-    // Reset tab to daily
-    currentTab = 'daily';
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const dailyView = document.getElementById('view-daily');
-    const dailyTab = document.getElementById('tab-daily');
-    if (dailyView) dailyView.classList.add('active');
-    if (dailyTab) dailyTab.classList.add('active');
-
-    // Show auth screen
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
-
-    // Clear auth form fields
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-    const authError = document.getElementById('authError');
-    if (loginEmail) loginEmail.value = '';
-    if (loginPassword) loginPassword.value = '';
-    if (authError) authError.textContent = '';
-
-  } catch (err) {
-    console.error('Signout error:', err);
-    // Force UI reset even if Supabase call fails
-    currentUser = null;
-    currentProfile = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
+  } catch(e) {
+    console.error('Signout error:', e);
+  } finally {
+    window.location.reload();
   }
 }
 
@@ -2910,6 +2869,12 @@ async function initApp(user) {
   updateOnlineStatus();
   renderDaily();
 
+  // Ensure signout button is wired correctly at runtime
+  const signoutBtn = document.querySelector('.nav-signout');
+  if (signoutBtn) {
+    signoutBtn.onclick = handleSignout;
+  }
+
   // Every 10s: update countdown bars in-place (lightweight)
   function updateCountdownBars() {
     const now = nowMins();
@@ -2965,6 +2930,12 @@ sb.auth.onAuthStateChange(async(event, session)=>{
     if(fullRenderInterval) clearInterval(fullRenderInterval);
   }
 });
+
+// Global escape — can be called from browser console if UI button fails
+window.forceSignout = async function() {
+  await sb.auth.signOut();
+  window.location.reload();
+};
 </script>
 </body>
 </html>
