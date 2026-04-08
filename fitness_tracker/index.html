@@ -1412,13 +1412,57 @@ async function handleSignup() {
 }
 
 async function handleSignout() {
-  await sb.auth.signOut();
-  currentUser = null; currentProfile = null;
-  userCompletions = {}; otherUserCompletions = {};
-  if(clockInterval) clearInterval(clockInterval);
-  if(fullRenderInterval) clearInterval(fullRenderInterval);
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
+  try {
+    // Clear all intervals first
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+    if (typeof fullRenderInterval !== 'undefined' && fullRenderInterval) {
+      clearInterval(fullRenderInterval); fullRenderInterval = null;
+    }
+
+    // Reset all state
+    currentUser = null;
+    currentProfile = null;
+    userCompletions = {};
+    otherUserCompletions = {};
+    linkedPartnerId = null;
+
+    // Clear any open modals
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.remove();
+    document.body.style.overflow = '';
+
+    // Sign out from Supabase
+    await sb.auth.signOut();
+
+    // Reset tab to daily
+    currentTab = 'daily';
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const dailyView = document.getElementById('view-daily');
+    const dailyTab = document.getElementById('tab-daily');
+    if (dailyView) dailyView.classList.add('active');
+    if (dailyTab) dailyTab.classList.add('active');
+
+    // Show auth screen
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+
+    // Clear auth form fields
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const authError = document.getElementById('authError');
+    if (loginEmail) loginEmail.value = '';
+    if (loginPassword) loginPassword.value = '';
+    if (authError) authError.textContent = '';
+
+  } catch (err) {
+    console.error('Signout error:', err);
+    // Force UI reset even if Supabase call fails
+    currentUser = null;
+    currentProfile = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+  }
 }
 
 // ══════════════════════════════════════════════
