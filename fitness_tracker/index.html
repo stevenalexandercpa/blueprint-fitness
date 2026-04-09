@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Vitalus OS — Longevity Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 <style>
   :root {
     --bg: #060d10;
@@ -2778,7 +2778,10 @@ function switchTab(tab) {
   else if(tab==='2day') render2Day();
   else if(tab==='weekly') renderWeekly();
   else if(tab==='together') renderTogether();
-  else if(tab==='metrics') renderMetricsCharts();
+  else if(tab==='metrics') {
+    // Small delay ensures view is visible before canvas sizing
+    setTimeout(() => renderMetricsCharts(), 50);
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -2803,20 +2806,41 @@ function setMetricPlaceholders(baseline) {
 }
 
 async function renderMetricsCharts() {
-  const { data } = await sb.from('metrics')
+  if (!currentUser) return;
+
+  const { data, error } = await sb.from('metrics')
     .select('*')
     .eq('user_id', currentUser.id)
     .order('date', { ascending: true });
 
-  if (!data) return;
+  console.log('Metrics query result:', data, 'User ID:', currentUser?.id);
+
+  if (error) {
+    console.error('Metrics load error:', error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    ['chartWeight','chartFTP','chartBF'].forEach(id => {
+      const c = document.getElementById(id);
+      const e = document.getElementById(id+'Empty');
+      if (c) c.style.display = 'none';
+      if (e) e.style.display = 'block';
+    });
+    return;
+  }
 
   // Load first entry to use as placeholder baseline
-  const baseline = data.length > 0 ? data[0] : null;
+  const baseline = data[0];
   setMetricPlaceholders(baseline);
 
   const weightData = data.filter(r => r.weight_lbs).map(r => ({ x: r.date, y: parseFloat(r.weight_lbs) }));
   const ftpData = data.filter(r => r.ftp_watts).map(r => ({ x: r.date, y: parseInt(r.ftp_watts) }));
   const bfData = data.filter(r => r.body_fat_pct).map(r => ({ x: r.date, y: parseFloat(r.body_fat_pct) }));
+
+  console.log('Weight entries:', weightData);
+  console.log('FTP entries:', ftpData);
+  console.log('BF entries:', bfData);
 
   drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165);
   drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250);
@@ -2840,7 +2864,8 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr || 600;
+  const canvasWidth = rect.width > 0 ? rect.width : canvas.offsetWidth || canvas.parentElement?.offsetWidth || 320;
+  canvas.width = canvasWidth * dpr;
   canvas.height = 160 * dpr;
   ctx.scale(dpr, dpr);
 

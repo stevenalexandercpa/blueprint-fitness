@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(node --input-type=module)",
+      "Bash(curl -sL \"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\" -o \"g:/dev/projects/fitness/fitness_tracker/supabase.js\")"
     ]
   }
 }
