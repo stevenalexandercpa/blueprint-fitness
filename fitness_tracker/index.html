@@ -1111,17 +1111,17 @@
         <div class="metrics-row">
           <div class="metric-input-group">
             <label class="form-label">Weight (lbs)</label>
-            <input class="form-input" type="number" id="metricWeight" placeholder="185">
+            <input class="form-input" type="number" id="metricWeight" placeholder="e.g. 180">
           </div>
           <div class="metric-input-group">
             <label class="form-label">FTP (watts)</label>
-            <input class="form-input" type="number" id="metricFTP" placeholder="189">
+            <input class="form-input" type="number" id="metricFTP" placeholder="e.g. 200">
           </div>
         </div>
         <div class="metrics-row">
           <div class="metric-input-group">
             <label class="form-label">Body Fat %</label>
-            <input class="form-input" type="number" id="metricBF" placeholder="25.2" step="0.1">
+            <input class="form-input" type="number" id="metricBF" placeholder="e.g. 20.0" step="0.1">
           </div>
           <div class="metric-input-group">
             <label class="form-label">Notes</label>
@@ -1142,21 +1142,30 @@
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px;">Weight</div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Goal: 165 lbs</div>
         <canvas id="chartWeight" height="160"></canvas>
-        <div id="chartWeightEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);">No weight entries yet — log your first measurement in the Together tab.</div>
+        <div id="chartWeightEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+          No weight entries yet.<br>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ LOG YOUR FIRST ENTRY ABOVE</span>
+        </div>
       </div>
 
       <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">FTP — Functional Threshold Power</div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Goal: 220–250W</div>
         <canvas id="chartFTP" height="160"></canvas>
-        <div id="chartFTPEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);">No FTP entries yet — log after your next test.</div>
+        <div id="chartFTPEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+          No FTP entries yet.<br>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ LOG AFTER YOUR NEXT FTP TEST</span>
+        </div>
       </div>
 
       <div style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:4px;">Body Fat %</div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Current: 25.2% · Goal: ~17%</div>
         <canvas id="chartBF" height="160"></canvas>
-        <div id="chartBFEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);">No body fat entries yet.</div>
+        <div id="chartBFEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+          No body fat entries yet.<br>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ LOG YOUR FIRST BODY COMPOSITION READING ABOVE</span>
+        </div>
       </div>
     </div>
 
@@ -2683,6 +2692,24 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════
 // METRICS CHARTS
 // ══════════════════════════════════════════════
+function setMetricPlaceholders(baseline) {
+  const weightInput = document.getElementById('metricWeight');
+  const ftpInput = document.getElementById('metricFTP');
+  const bfInput = document.getElementById('metricBF');
+
+  if (!weightInput || !ftpInput || !bfInput) return;
+
+  if (baseline) {
+    weightInput.placeholder = baseline.weight_lbs ? baseline.weight_lbs + ' lbs (first entry)' : 'e.g. 180';
+    ftpInput.placeholder = baseline.ftp_watts ? baseline.ftp_watts + 'W (first entry)' : 'e.g. 200';
+    bfInput.placeholder = baseline.body_fat_pct ? baseline.body_fat_pct + '% (first entry)' : 'e.g. 20.0';
+  } else {
+    weightInput.placeholder = 'e.g. 180';
+    ftpInput.placeholder = 'e.g. 200';
+    bfInput.placeholder = 'e.g. 20.0';
+  }
+}
+
 async function renderMetricsCharts() {
   const { data } = await sb.from('metrics')
     .select('*')
@@ -2690,6 +2717,10 @@ async function renderMetricsCharts() {
     .order('date', { ascending: true });
 
   if (!data) return;
+
+  // Load first entry to use as placeholder baseline
+  const baseline = data.length > 0 ? data[0] : null;
+  setMetricPlaceholders(baseline);
 
   const weightData = data.filter(r => r.weight_lbs).map(r => ({ x: r.date, y: parseFloat(r.weight_lbs) }));
   const ftpData = data.filter(r => r.ftp_watts).map(r => ({ x: r.date, y: parseInt(r.ftp_watts) }));
