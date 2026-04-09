@@ -192,34 +192,7 @@
   }
   .nav-online-dot.offline { background: var(--red); }
 
-  .nav-user {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: var(--muted);
-  }
-
-  .nav-signout {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: var(--muted);
-    background: none;
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    padding: 4px 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .nav-signout:hover { border-color: var(--red); color: var(--red); }
-
-  .nav-day-type {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-  }
+  .nav-signout:hover { border-color: var(--red) !important; color: var(--red) !important; }
 
   .tabbar {
     position: fixed;
@@ -956,41 +929,62 @@
 
   <div class="nav">
     <div class="nav-logo" onclick="location.reload()" style="cursor:pointer">VITALUS <span style="font-size:14px;letter-spacing:2px;color:var(--gold);vertical-align:super;">OS</span></div>
-    <div class="nav-right" id="navRight">
-      <div class="nav-user-badge" id="navUserBadge" style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-right" id="navRight" style="display:flex;align-items:center;gap:10px;">
+      <div id="navUserPill" style="
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--card);
+        border: 1px solid var(--border2);
+        padding: 6px 12px 6px 6px;
+        height: 36px;
+        box-sizing: border-box;
+      ">
         <div id="navAvatar" style="
-          width: 32px;
-          height: 32px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
-          background: var(--accent-dim);
-          border: 2px solid var(--accent);
+          background: var(--gold-dim);
+          border: 1.5px solid var(--gold);
           display: flex;
           align-items: center;
           justify-content: center;
           font-family: 'Bebas Neue', sans-serif;
-          font-size: 16px;
+          font-size: 13px;
           letter-spacing: 1px;
-          color: var(--accent);
+          color: var(--gold);
           flex-shrink: 0;
         ">?</div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
+        <div style="display:flex;flex-direction:column;gap:2px;justify-content:center;">
           <div id="navUser" style="
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 1px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 15px;
+            letter-spacing: 2px;
             color: var(--text);
             line-height: 1;
           "></div>
           <div id="navDayType" style="
             font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 1px;
-            padding: 1px 6px;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            line-height: 1;
           "></div>
         </div>
-        <div class="nav-online-dot" id="onlineDot" title="Online"></div>
-        <button class="nav-signout" onclick="handleSignout()">OUT</button>
       </div>
+      <button class="nav-signout" onclick="handleSignout()" style="
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--muted);
+        background: none;
+        border: 1px solid var(--border2);
+        padding: 0 12px;
+        height: 36px;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        box-sizing: border-box;
+      ">OUT</button>
     </div>
   </div>
 
@@ -1412,9 +1406,9 @@ function showToast(msg,type='') {
 }
 
 function getDayTypeLabel(dt) {
-  if(dt==='ride') return `<span style="color:var(--accent);background:var(--accent-dim);border:1px solid rgba(200,240,60,0.3);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">RIDE</span>`;
-  if(dt==='lift') return `<span style="color:var(--blue);background:var(--blue-dim);border:1px solid rgba(60,168,240,0.3);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">LIFT</span>`;
-  return `<span style="color:var(--muted);background:var(--muted2);padding:2px 8px;font-size:12px;letter-spacing:1px;font-family:'DM Mono',monospace;">REST</span>`;
+  if (dt === 'ride') return `<span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;">RIDE</span>`;
+  if (dt === 'lift') return `<span style="color:var(--blue);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;">LIFT</span>`;
+  return `<span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;">REST</span>`;
 }
 
 function taskStatus(taskId, dateKey) {
