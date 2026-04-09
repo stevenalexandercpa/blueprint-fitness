@@ -2813,8 +2813,6 @@ async function renderMetricsCharts() {
     .eq('user_id', currentUser.id)
     .order('date', { ascending: true });
 
-  console.log('Metrics query result:', data, 'User ID:', currentUser?.id);
-
   if (error) {
     console.error('Metrics load error:', error);
     return;
@@ -2837,10 +2835,6 @@ async function renderMetricsCharts() {
   const weightData = data.filter(r => r.weight_lbs).map(r => ({ x: r.date, y: parseFloat(r.weight_lbs) }));
   const ftpData = data.filter(r => r.ftp_watts).map(r => ({ x: r.date, y: parseInt(r.ftp_watts) }));
   const bfData = data.filter(r => r.body_fat_pct).map(r => ({ x: r.date, y: parseFloat(r.body_fat_pct) }));
-
-  console.log('Weight entries:', weightData);
-  console.log('FTP entries:', ftpData);
-  console.log('BF entries:', bfData);
 
   drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165);
   drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250);
