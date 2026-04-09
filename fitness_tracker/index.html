@@ -1621,17 +1621,31 @@ function calcStreak(completions) {
     const dt = DAY_TYPES[d.getDay()];
     const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp = completions[key]||{};
-    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early'||comp[t.id]==='skipped');
+
+    // If nothing recorded for this day, stop — user hadn't started yet
+    const recorded = tasks.filter(t => comp[t.id] && comp[t.id] !== 'pending').length;
+    if (recorded === 0) break;
+
+    const allDone = tasks.every(t =>
+      comp[t.id]==='done' ||
+      comp[t.id]==='late' ||
+      comp[t.id]==='early' ||
+      comp[t.id]==='skipped'
+    );
     if (!allDone) break;
     streak++;
     d.setDate(d.getDate()-1);
   }
-  // Today: only add if ALL tasks complete
+  // Today: counts toward streak as soon as any task is completed
   const todayComp = completions[todayKey()]||{};
   const todayDt = dayType();
   const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
-  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late'||todayComp[t.id]==='early'||todayComp[t.id]==='skipped');
-  if (todayAllDone) streak++;
+  const todayHasAny = todayTasks.some(t =>
+    todayComp[t.id]==='done' ||
+    todayComp[t.id]==='late' ||
+    todayComp[t.id]==='early'
+  );
+  if (todayHasAny) streak++;
   return streak;
 }
 
@@ -1820,7 +1834,9 @@ function renderDaily() {
   document.getElementById('ringFill').style.strokeDashoffset = offset;
   document.getElementById('ringPct').textContent = pct+'%';
 
-  const firstName = (currentProfile?.name || 'Hey').split(' ')[0];
+  const firstName = currentProfile?.name
+    ? currentProfile.name.split(' ')[0]
+    : (document.getElementById('navUser')?.textContent?.trim() || 'there');
   const hourNow = new Date().getHours();
   const greeting = hourNow < 12 ? 'Good morning' : hourNow < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('ringTitle').textContent = greeting + ', ' + firstName + '.';
@@ -2984,6 +3000,28 @@ async function initApp(user) {
   currentProfile = profileResult.data;
   userCompletions = freshCompletions;
   saveCompletionsCache(user.id, userCompletions);
+
+  // Bootstrap avatar immediately once profile is loaded
+  if (currentProfile?.name) {
+    const avatarEl = document.getElementById('navAvatar');
+    const userName = currentProfile.name;
+    if (avatarEl) {
+      avatarEl.textContent = userName.charAt(0).toUpperCase();
+      if (userName.toLowerCase() === 'steve') {
+        avatarEl.style.background = 'var(--gold-dim)';
+        avatarEl.style.borderColor = 'var(--gold)';
+        avatarEl.style.color = 'var(--gold)';
+      } else if (userName.toLowerCase() === 'bekky') {
+        avatarEl.style.background = 'var(--pink-dim)';
+        avatarEl.style.borderColor = 'var(--pink)';
+        avatarEl.style.color = 'var(--pink)';
+      } else {
+        avatarEl.style.background = 'var(--accent-dim)';
+        avatarEl.style.borderColor = 'var(--accent)';
+        avatarEl.style.color = 'var(--accent)';
+      }
+    }
+  }
 
   // Auto-mark missed
   await autoMarkMissed();
