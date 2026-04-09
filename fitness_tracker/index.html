@@ -2738,30 +2738,91 @@ async function logMetrics() {
 }
 
 async function loadMetricsHistory() {
-  const { data } = await withRetry(() =>
+  const { data, error } = await withRetry(() =>
     sb.from('metrics')
       .select('*')
       .eq('user_id', currentUser.id)
-      .order('date', { ascending:false })
-      .limit(10)
+      .order('date', { ascending: false })
+      .limit(5)
   );
 
-  const el = document.getElementById('metricsHistory');
-  if (!data||data.length===0) {
-    el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px;">No entries yet</div>';
+  if (error) {
+    console.error('Metrics history error:', error);
     return;
   }
 
-  el.innerHTML = data.map(row=>`
-    <div class="metrics-entry">
-      <div class="metrics-entry-date">${row.date}</div>
-      <div class="metrics-entry-vals">
-        ${row.weight_lbs?`<div><div class="metrics-entry-val" style="color:var(--gold)">${row.weight_lbs}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">LBS</div></div>`:''}
-        ${row.ftp_watts?`<div><div class="metrics-entry-val" style="color:var(--green)">${row.ftp_watts}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">WATTS</div></div>`:''}
-        ${row.body_fat_pct?`<div><div class="metrics-entry-val" style="color:var(--blue)">${row.body_fat_pct}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px">BF%</div></div>`:''}
+  const el = document.getElementById('metricsHistory');
+  if (!data || data.length === 0) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:32px 20px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--border2);margin-bottom:8px;">NO ENTRIES</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">Log your first measurement above<br>to start tracking your progress.</div>
       </div>
-    </div>
-  `).join('');
+    `;
+    return;
+  }
+
+  el.innerHTML = data.slice(0, 5).map((row, index) => {
+    const isLatest = index === 0;
+    const dateFormatted = new Date(row.date + 'T12:00:00').toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    return `
+      <div style="
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        ${index === 0 ? 'padding-top:0;' : ''}
+      ">
+        <div>
+          <div style="
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: ${isLatest ? 'var(--text)' : 'var(--muted)'};
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          ">
+            ${dateFormatted.toUpperCase()}
+            ${isLatest ? '<span style="font-size:10px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(45,181,132,0.3);padding:1px 6px;letter-spacing:1px;">LATEST</span>' : ''}
+          </div>
+          ${row.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic;">${row.notes}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          ${row.weight_lbs ? `
+            <div style="text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold);line-height:1;">${row.weight_lbs}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;">LBS</div>
+            </div>` : ''}
+          ${row.ftp_watts ? `
+            <div style="text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--accent);line-height:1;">${row.ftp_watts}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;">WATTS</div>
+            </div>` : ''}
+          ${row.body_fat_pct ? `
+            <div style="text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--blue);line-height:1;">${row.body_fat_pct}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;">BF%</div>
+            </div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('') + (data.length === 5 ? `
+    <div style="
+      text-align:center;
+      padding: 12px 0 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    ">SHOWING LAST 5 ENTRIES · ALL DATA TRACKED IN CHARTS ABOVE</div>
+  ` : '');
 }
 
 // ══════════════════════════════════════════════
