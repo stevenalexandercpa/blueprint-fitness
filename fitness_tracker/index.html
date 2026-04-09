@@ -1607,39 +1607,44 @@ async function autoMarkMissed() {
 // ══════════════════════════════════════════════
 function calcStreak(completions) {
   let streak = 0;
-  const d = new Date();
-  // Check yesterday backwards — only count if ALL tasks completed
-  d.setDate(d.getDate()-1);
-  for (let i=0; i<60; i++) {
-    const key = d.toLocaleDateString('en-CA', { timeZone: TZ });
-    const dt = DAY_TYPES[d.getDay()];
-    const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
-    const comp = completions[key]||{};
 
-    // If nothing recorded for this day, stop — user hadn't started yet
+  // Walk backwards starting from yesterday
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - 1);
+
+  for (let i = 0; i < 60; i++) {
+    const key = d.toLocaleDateString('en-CA', { timeZone: TZ });
+    const dt = DAY_TYPES[d.getDay()] || 'rest';
+    const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
+    const comp = completions[key] || {};
+
+    // No data recorded for this day — stop
     const recorded = tasks.filter(t => comp[t.id] && comp[t.id] !== 'pending').length;
     if (recorded === 0) break;
 
-    const allDone = tasks.every(t =>
-      comp[t.id]==='done' ||
-      comp[t.id]==='late' ||
-      comp[t.id]==='early' ||
-      comp[t.id]==='skipped'
-    );
-    if (!allDone) break;
+    // Any miss breaks the streak
+    const hasMiss = tasks.some(t => comp[t.id] === 'missed');
+    if (hasMiss) break;
+
+    // All recorded tasks are non-missed — count this day
     streak++;
-    d.setDate(d.getDate()-1);
+    d.setDate(d.getDate() - 1);
   }
-  // Today: counts toward streak as soon as any task is completed
-  const todayComp = completions[todayKey()]||{};
+
+  // Today — only add if ALL tasks are fully complete
+  // (in-progress day does not increment the displayed streak)
+  const todayComp = completions[todayKey()] || {};
   const todayDt = dayType();
-  const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
-  const todayHasAny = todayTasks.some(t =>
-    todayComp[t.id]==='done' ||
-    todayComp[t.id]==='late' ||
-    todayComp[t.id]==='early'
+  const todayTasks = TASK_TEMPLATES[todayDt] || TASK_TEMPLATES.rest;
+  const todayAllDone = todayTasks.every(t =>
+    todayComp[t.id] === 'done' ||
+    todayComp[t.id] === 'late' ||
+    todayComp[t.id] === 'early' ||
+    todayComp[t.id] === 'skipped'
   );
-  if (todayHasAny) streak++;
+  if (todayAllDone) streak++;
+
   return streak;
 }
 
