@@ -1447,8 +1447,13 @@ async function handleSignup() {
 }
 
 async function handleSignout() {
-  await sb.auth.signOut();
-  window.location.href = window.location.href;
+  try {
+    await sb.auth.signOut();
+  } catch(e) {
+    console.error('signout error:', e);
+  } finally {
+    window.location.reload();
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -2940,12 +2945,6 @@ async function initApp(user) {
 
   updateOnlineStatus();
   renderDaily();
-
-  // Ensure signout button is wired correctly at runtime
-  const signoutBtn = document.querySelector('.nav-signout');
-  if (signoutBtn) {
-    signoutBtn.onclick = handleSignout;
-  }
 
   // Every 10s: update countdown bars in-place (lightweight)
   function updateCountdownBars() {
