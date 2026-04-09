@@ -443,6 +443,7 @@
   .task-item.missed-task { border-color: var(--red); opacity: 0.45; }
   .task-item.late-task { border-color: var(--orange); opacity: 0.45; }
   .task-item.early-task { border-color: var(--blue); box-shadow: 0 0 12px rgba(64,168,232,0.2); opacity: 0.45; }
+  .task-item.skipped-task { border-color: var(--muted2); opacity: 0.35; }
   .task-item.dimmed-task { opacity: 0.45; }
 
   .task-header { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
@@ -478,6 +479,7 @@
   .task-status.missed { background: var(--red-dim); border-color: var(--red); color: var(--red); }
   .task-status.late { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
   .task-status.early { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+  .task-status.skipped { background: var(--muted2); border-color: var(--muted); color: var(--muted); }
   .task-status.active { border-color: var(--accent); color: var(--accent); animation: pulse-circle 2s infinite; }
 
   @keyframes pulse-circle {
@@ -1381,7 +1383,8 @@ function getDayCompletion(dateKey, completions) {
   const comp = completions[dateKey]||{};
   const done = tasks.filter(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early').length;
   const missed = tasks.filter(t=>comp[t.id]==='missed').length;
-  return { done, missed, total:tasks.length };
+  const skipped = tasks.filter(t=>comp[t.id]==='skipped').length;
+  return { done, missed, skipped, total:tasks.length };
 }
 
 // ══════════════════════════════════════════════
@@ -1564,7 +1567,7 @@ function calcStreak(completions) {
     const dt = DAY_TYPES[d.getDay()];
     const tasks = TASK_TEMPLATES[dt]||TASK_TEMPLATES.rest;
     const comp = completions[key]||{};
-    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early');
+    const allDone = tasks.every(t=>comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early'||comp[t.id]==='skipped');
     if (!allDone) break;
     streak++;
     d.setDate(d.getDate()-1);
@@ -1573,7 +1576,7 @@ function calcStreak(completions) {
   const todayComp = completions[todayKey()]||{};
   const todayDt = dayType();
   const todayTasks = TASK_TEMPLATES[todayDt]||TASK_TEMPLATES.rest;
-  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late'||todayComp[t.id]==='early');
+  const todayAllDone = todayTasks.every(t=>todayComp[t.id]==='done'||todayComp[t.id]==='late'||todayComp[t.id]==='early'||todayComp[t.id]==='skipped');
   if (todayAllDone) streak++;
   return streak;
 }
@@ -1599,19 +1602,18 @@ function openDayHistory(dateKey) {
   const tasks = TASK_TEMPLATES[dt] || TASK_TEMPLATES.rest;
   const comp = userCompletions[dateKey] || {};
 
-  const done = tasks.filter(t => comp[t.id]==='done'||comp[t.id]==='late'||comp[t.id]==='early').length;
-  const missed = tasks.filter(t => comp[t.id]==='missed').length;
-  const pending = tasks.filter(t => !comp[t.id]||comp[t.id]==='pending').length;
+  const { done, missed, skipped } = getDayCompletion(dateKey, userCompletions);
 
   const dayLabel = clickedDate.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   const dtLabel = dt.charAt(0).toUpperCase() + dt.slice(1) + ' Day';
 
   function getStatusDisplay(status) {
-    if (status === 'done')   return { icon:'✓', bg:'var(--accent)',    border:'var(--accent)',    textColor:'var(--bg)' };
-    if (status === 'early')  return { icon:'✓', bg:'var(--blue-dim)',  border:'var(--blue)',      textColor:'var(--blue)' };
-    if (status === 'late')   return { icon:'✓', bg:'var(--orange-dim)',border:'var(--orange)',    textColor:'var(--orange)' };
-    if (status === 'missed') return { icon:'✗', bg:'var(--red-dim)',   border:'var(--red)',       textColor:'var(--red)' };
-    return                          { icon:'○', bg:'transparent',       border:'var(--border2)', textColor:'var(--muted)' };
+    if (status === 'done')    return { icon:'✓', bg:'var(--accent)',    border:'var(--accent)',    textColor:'var(--bg)' };
+    if (status === 'early')   return { icon:'✓', bg:'var(--blue-dim)',  border:'var(--blue)',      textColor:'var(--blue)' };
+    if (status === 'late')    return { icon:'✓', bg:'var(--orange-dim)',border:'var(--orange)',    textColor:'var(--orange)' };
+    if (status === 'missed')  return { icon:'✗', bg:'var(--red-dim)',   border:'var(--red)',       textColor:'var(--red)' };
+    if (status === 'skipped') return { icon:'–', bg:'var(--muted2)',    border:'var(--border2)',   textColor:'var(--muted)' };
+    return                           { icon:'○', bg:'transparent',      border:'var(--border2)',   textColor:'var(--muted)' };
   }
 
   const overlay = document.createElement('div');
@@ -1639,7 +1641,7 @@ function openDayHistory(dateKey) {
             <div class="modal-summary-label">Missed</div>
           </div>
           <div class="modal-summary-box">
-            <div class="modal-summary-val" style="color:var(--muted)">${pending}</div>
+            <div class="modal-summary-val" style="color:var(--muted)">${skipped}</div>
             <div class="modal-summary-label">Skipped</div>
           </div>
         </div>
@@ -1712,8 +1714,8 @@ function renderDaily() {
     const todayKey2 = todayDate.toLocaleDateString('en-CA', { timeZone: TZ });
     const isFuture = d > todayDate && key !== todayKey2;
     const isToday = key === todayKey2;
-    const {done,missed,total}=getDayCompletion(key,userCompletions);
-    const allDone = done === total && total > 0 && missed === 0;
+    const {done,missed,skipped,total}=getDayCompletion(key,userCompletions);
+    const allDone = (done + skipped) === total && total > 0 && missed === 0;
     let cls='';
     if (isToday && done === 0) cls = 'today';
     else if (isToday && allDone) cls = 'done';
@@ -1769,6 +1771,7 @@ function renderDaily() {
     else if(status==='missed'){statusIcon='✗';statusCls='missed';}
     else if(status==='late'){statusIcon='✓';statusCls='late';}
     else if(status==='early'){statusIcon='✓';statusCls='early';}
+    else if(status==='skipped'){statusIcon='–';statusCls='skipped';}
     else if(isActive){statusIcon='●';statusCls='active';}
 
     let pillHtml='';
@@ -1784,11 +1787,14 @@ function renderDaily() {
       pillHtml=`<div class="window-pill early-pill"><div class="dot"></div>COMPLETED EARLY ✓</div>`;
     } else if(status==='done'){
       pillHtml=`<div class="window-pill open"><div class="dot"></div>COMPLETE ✓</div>`;
+    } else if(status==='skipped'){
+      pillHtml=`<div class="window-pill" style="background:var(--muted2);color:var(--muted);border:1px solid var(--border2)"><div class="dot"></div>SKIPPED</div>`;
     }
 
     let actionHtml='';
     if(status==='pending'&&ws==='upcoming'){
-      actionHtml=`<button class="btn-late" style="color:var(--blue);border-color:var(--blue);" onclick="completeTask('${task.id}','${dk}','upcoming')">MARK AS COMPLETED EARLY</button>`;
+      actionHtml=`<button class="btn-late" style="color:var(--blue);border-color:var(--blue);" onclick="completeTask('${task.id}','${dk}','upcoming')">MARK AS COMPLETED EARLY</button>
+      <button class="btn-late" style="color:var(--muted);border-color:var(--muted2);margin-top:6px;" onclick="skipTask('${task.id}','${dk}')">SKIP THIS TASK</button>`;
     } else if(status==='pending'&&ws==='open'){
       const closeTime=task.time+task.window;
       const minsLeft=Math.max(0,closeTime-nowMins());
@@ -1797,16 +1803,20 @@ function renderDaily() {
         <div class="countdown-bar"><div class="countdown-fill" id="cd-bar-${task.id}" style="width:${pctLeft}%"></div></div>
         <div class="countdown-text" id="cd-text-${task.id}">Window closes in ${minsLeft} min · ${fmtTime(closeTime)}</div>
         <button class="btn-complete" onclick="completeTask('${task.id}','${dk}','open')">✓ MARK COMPLETE</button>
+        <button class="btn-late" style="color:var(--muted);border-color:var(--muted2);margin-top:6px;" onclick="skipTask('${task.id}','${dk}')">SKIP THIS TASK</button>
       `;
     } else if((status==='pending'&&ws==='expired')||status==='missed'){
-      actionHtml=`<button class="btn-late" onclick="completeTask('${task.id}','${dk}','expired')">MARK AS LATE COMPLETION</button>`;
+      actionHtml=`<button class="btn-late" onclick="completeTask('${task.id}','${dk}','expired')">MARK AS LATE COMPLETION</button>
+      <button class="btn-late" style="color:var(--muted);border-color:var(--muted2);margin-top:6px;" onclick="skipTask('${task.id}','${dk}')">SKIP THIS TASK</button>`;
     } else if(status==='done'||status==='late'){
       actionHtml=`<button class="btn-late" onclick="undoTask('${task.id}','${dk}')" style="color:var(--muted);border-color:var(--border2)">UNDO</button>`;
+    } else if(status==='skipped'){
+      actionHtml=`<button class="btn-late" onclick="undoTask('${task.id}','${dk}')" style="color:var(--muted);border-color:var(--border2)">UNDO SKIP</button>`;
     }
 
     const item=document.createElement('div');
-    const isCompleted = status==='done'||status==='missed'||status==='late'||status==='early';
-    item.className='task-item'+(isActive?' active-task':'')+(status==='done'?' done-task':'')+(status==='missed'?' missed-task':'')+(status==='late'?' late-task':'')+(status==='early'?' early-task':'');
+    const isCompleted = status==='done'||status==='missed'||status==='late'||status==='early'||status==='skipped';
+    item.className='task-item'+(isActive?' active-task':'')+(status==='done'?' done-task':'')+(status==='missed'?' missed-task':'')+(status==='late'?' late-task':'')+(status==='early'?' early-task':'')+(status==='skipped'?' skipped-task':'');
     if (isCompleted && !isActive) item.style.opacity = '0.42';
     item.style.animationDelay=(idx*25)+'ms';
     item.id='task-'+task.id;
@@ -1840,7 +1850,7 @@ function toggleTask(taskId) {
 
 async function quickComplete(taskId, dateKey) {
   const status=taskStatus(taskId,dateKey);
-  if(status==='done'||status==='late'||status==='early') {
+  if(status==='done'||status==='late'||status==='early'||status==='skipped') {
     await undoTask(taskId,dateKey);
   } else {
     const task=(TASK_TEMPLATES[dayType()]||TASK_TEMPLATES.rest).find(t=>t.id===taskId);
@@ -1881,6 +1891,21 @@ async function undoTask(taskId, dateKey) {
   if (!ok && prev !== undefined) {
     if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
     userCompletions[dateKey][taskId] = prev;
+    saveCompletionsCache(currentUser.id, userCompletions);
+    renderDaily();
+  }
+}
+
+async function skipTask(taskId, dateKey) {
+  const prev = userCompletions[dateKey]?.[taskId];
+  if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
+  userCompletions[dateKey][taskId] = 'skipped';
+  saveCompletionsCache(currentUser.id, userCompletions);
+  renderDaily();
+  showToast('Task skipped', 'orange');
+  const ok = await saveCompletion(taskId, 'skipped', dateKey);
+  if (!ok) {
+    prev === undefined ? delete userCompletions[dateKey][taskId] : (userCompletions[dateKey][taskId] = prev);
     saveCompletionsCache(currentUser.id, userCompletions);
     renderDaily();
   }
@@ -1997,8 +2022,9 @@ function render2Day() {
       else if(status==='late'){checkCls='late';checkIcon='✓';}
       else if(status==='early'){checkCls='done';checkIcon='✓';}
       else if(status==='missed'){checkCls='missed';checkIcon='✗';}
+      else if(status==='skipped'){checkCls='';checkIcon='–';}
       const taskEl=document.createElement('div');
-      taskEl.className='two-day-task'+(status==='done'||status==='late'||status==='early'?' done-t':'');
+      taskEl.className='two-day-task'+(status==='done'||status==='late'||status==='early'||status==='skipped'?' done-t':'');
       if(offset===0){ taskEl.onclick=()=>{quickComplete(task.id,dk).then(()=>render2Day());}; taskEl.style.cursor='pointer'; }
       taskEl.innerHTML=`<div class="two-day-check ${checkCls}">${checkIcon}</div><div class="two-day-task-name">${task.icon} ${task.name}</div><div class="two-day-time">${fmtTime(task.time)}</div>`;
       col.appendChild(taskEl);
