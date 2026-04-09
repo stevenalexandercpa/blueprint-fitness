@@ -335,6 +335,28 @@
     font-weight: bold;
   }
 
+  .streak-dot.missed::before {
+    content: '✕';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  .streak-dot.partial::before {
+    content: '✕';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--red);
+    font-weight: bold;
+  }
+
   .streak-dot.inprogress {
     background: var(--accent-dim);
     border-color: var(--accent);
