@@ -957,12 +957,40 @@
   <div class="nav">
     <div class="nav-logo" onclick="location.reload()" style="cursor:pointer">VITALUS <span style="font-size:14px;letter-spacing:2px;color:var(--gold);vertical-align:super;">OS</span></div>
     <div class="nav-right" id="navRight">
-      <div>
-        <div class="nav-user" id="navUser"></div>
-        <div id="navDayType" class="nav-day-type"></div>
+      <div class="nav-user-badge" id="navUserBadge" style="display:flex;align-items:center;gap:10px;">
+        <div id="navAvatar" style="
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--accent-dim);
+          border: 2px solid var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 16px;
+          letter-spacing: 1px;
+          color: var(--accent);
+          flex-shrink: 0;
+        ">?</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
+          <div id="navUser" style="
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--text);
+            line-height: 1;
+          "></div>
+          <div id="navDayType" style="
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 1px 6px;
+          "></div>
+        </div>
+        <div class="nav-online-dot" id="onlineDot" title="Online"></div>
+        <button class="nav-signout" onclick="handleSignout()">OUT</button>
       </div>
-      <div class="nav-online-dot" id="onlineDot" title="Online"></div>
-      <button class="nav-signout" onclick="handleSignout()">OUT</button>
     </div>
   </div>
 
@@ -991,6 +1019,14 @@
         </div>
         <div class="ring-info">
           <div class="ring-info-title" id="ringTitle">Loading...</div>
+          <div id="ringDaySubtitle" style="
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            margin-top: -4px;
+          "></div>
           <div class="ring-next" id="ringNextLabel">Next task:</div>
           <div class="ring-next-task" id="ringNextTask">—</div>
         </div>
@@ -1447,6 +1483,10 @@ async function handleSignup() {
 }
 
 async function handleSignout() {
+  const avatarEl = document.getElementById('navAvatar');
+  if (avatarEl) avatarEl.textContent = '?';
+  const navUserEl = document.getElementById('navUser');
+  if (navUserEl) navUserEl.textContent = '';
   try {
     await sb.auth.signOut();
   } catch(e) {
@@ -1705,7 +1745,28 @@ function renderDaily() {
   const comp = userCompletions[dk]||{};
 
   // Nav
-  document.getElementById('navUser').textContent = (currentProfile?.name||'').toUpperCase();
+  const userName = currentProfile?.name || '';
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const avatarEl = document.getElementById('navAvatar');
+  if (avatarEl) {
+    avatarEl.textContent = userInitial || '?';
+    if (userName.toLowerCase() === 'steve') {
+      avatarEl.style.background = 'var(--gold-dim)';
+      avatarEl.style.borderColor = 'var(--gold)';
+      avatarEl.style.color = 'var(--gold)';
+    } else if (userName.toLowerCase() === 'bekky') {
+      avatarEl.style.background = 'var(--pink-dim)';
+      avatarEl.style.borderColor = 'var(--pink)';
+      avatarEl.style.color = 'var(--pink)';
+    } else {
+      avatarEl.style.background = 'var(--accent-dim)';
+      avatarEl.style.borderColor = 'var(--accent)';
+      avatarEl.style.color = 'var(--accent)';
+    }
+  }
+
+  document.getElementById('navUser').textContent = userName.toUpperCase();
   document.getElementById('navDayType').innerHTML = getDayTypeLabel(dt);
 
   // Streak
@@ -1759,8 +1820,18 @@ function renderDaily() {
   document.getElementById('ringFill').style.strokeDashoffset = offset;
   document.getElementById('ringPct').textContent = pct+'%';
 
-  const titleMap = { ride:'Ride Day — Power Zone', lift:'Lift Day — PPL', rest:'Rest Day — Recovery' };
-  document.getElementById('ringTitle').textContent = titleMap[dt];
+  const firstName = (currentProfile?.name || 'Hey').split(' ')[0];
+  const hourNow = new Date().getHours();
+  const greeting = hourNow < 12 ? 'Good morning' : hourNow < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('ringTitle').textContent = greeting + ', ' + firstName + '.';
+
+  const subtitleMap = {
+    ride: 'Ride Day · Power Zone · ' + new Date().toLocaleDateString('en-US',{weekday:'long'}),
+    lift: 'Lift Day · PPL · ' + new Date().toLocaleDateString('en-US',{weekday:'long'}),
+    rest: 'Rest Day · Recovery · ' + new Date().toLocaleDateString('en-US',{weekday:'long'})
+  };
+  const subtitleEl = document.getElementById('ringDaySubtitle');
+  if (subtitleEl) subtitleEl.textContent = subtitleMap[dt];
 
   const nextTask = tasks.find(t => { const s=comp[t.id]||'pending'; return s==='pending'||s==='missed'; });
   if (nextTask) {
