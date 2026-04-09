@@ -3063,10 +3063,16 @@ async function initApp(user) {
   try {
     currentUser = user;
 
-    // Load profile and completions in parallel — no early cache render
-    // (avoids renderDaily running before currentProfile is assigned)
+    // Phase 1 — show app instantly from cache so user sees content immediately
+    const cached = loadCachedCompletions(user.id);
+    if (cached) userCompletions = cached;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    // Phase 2 — load profile + fresh completions in parallel (background)
     const [profileResult, completionsData] = await Promise.all([
-      sb.from('profiles').select('*').eq('id', user.id).single(),
+      withRetry(() => sb.from('profiles').select('*').eq('id', user.id).single()),
       loadUserData(user.id)
     ]);
 
@@ -3077,12 +3083,14 @@ async function initApp(user) {
     // If no profile exists yet, create one from email
     if (!currentProfile) {
       const fallbackName = user.email.split('@')[0];
-      await sb.from('profiles').insert({ id: user.id, name: fallbackName });
-      const { data: newProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+      await withRetry(() => sb.from('profiles').insert({ id: user.id, name: fallbackName }));
+      const { data: newProfile } = await withRetry(() =>
+        sb.from('profiles').select('*').eq('id', user.id).single()
+      );
       currentProfile = newProfile;
     }
 
-    // Bootstrap avatar before first render
+    // Bootstrap avatar
     if (currentProfile?.name) {
       const avatarEl = document.getElementById('navAvatar');
       const userName = currentProfile.name;
@@ -3104,33 +3112,8 @@ async function initApp(user) {
       }
     }
 
-    // Auto mark missed tasks
+    // Phase 3 — re-render with fresh data + profile
     await autoMarkMissed();
-
-    // Check partner links
-    await checkExistingLink();
-    await checkAndAutoLink();
-
-    // Handle invite deep link — ?invite=<userId>
-    const urlParams = new URLSearchParams(window.location.search);
-    const inviteFrom = urlParams.get('invite');
-    if (inviteFrom && inviteFrom !== currentUser.id) {
-      const { data: existing } = await sb.from('couple_links')
-        .select('*')
-        .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
-        .limit(1);
-      if (!existing || existing.length === 0) {
-        await sb.from('couple_links').insert({ user_a: inviteFrom, user_b: currentUser.id });
-        window.history.replaceState({}, document.title, window.location.pathname);
-        showToast('✓ Automatically linked to your partner!');
-      }
-    }
-
-    // Show app
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-
     updateOnlineStatus();
     renderDaily();
 
@@ -3138,6 +3121,28 @@ async function initApp(user) {
     const lastTab = sessionStorage.getItem('vitalus_tab');
     if (lastTab && lastTab !== 'daily') {
       setTimeout(() => switchTab(lastTab), 100);
+    }
+
+    // Background tasks (non-blocking)
+    checkExistingLink();
+    checkAndAutoLink();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteFrom = urlParams.get('invite');
+    if (inviteFrom && inviteFrom !== currentUser.id) {
+      const { data: existing } = await withRetry(() =>
+        sb.from('couple_links')
+          .select('*')
+          .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+          .limit(1)
+      );
+      if (!existing || existing.length === 0) {
+        await withRetry(() =>
+          sb.from('couple_links').insert({ user_a: inviteFrom, user_b: currentUser.id })
+        );
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showToast('✓ Automatically linked to your partner!');
+      }
     }
 
     // Every 10s: update countdown bars in-place (lightweight)
@@ -3208,7 +3213,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Fallback — if loading screen still visible after 5s, show auth screen
+// Fallback — if loading screen still visible after 8s, show auth screen
 setTimeout(() => {
   const loadingEl = document.getElementById('loading');
   if (loadingEl && loadingEl.style.display !== 'none') {
@@ -3216,7 +3221,7 @@ setTimeout(() => {
     loadingEl.style.display = 'none';
     document.getElementById('authScreen').style.display = 'flex';
   }
-}, 5000);
+}, 8000);
 
 // Global escape — can be called from browser console if UI button fails
 window.forceSignout = async function() {
