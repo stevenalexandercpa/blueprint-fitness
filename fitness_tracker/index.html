@@ -3266,7 +3266,7 @@ async function renderWorkoutChart() {
   }));
 
   drawChart('chartWatts', 'chartWattsEmpty', chartData, '#2db584', 'W',
-    chartData[0]?.y || 100, 220);
+    chartData[0]?.y || 100, 220, { fontSize: 13 });
 }
 
 async function renderMetricsCharts() {
@@ -3302,16 +3302,17 @@ async function renderMetricsCharts() {
   const ftpData = data.filter(r => r.ftp_watts).map(r => ({ x: r.date, y: parseInt(r.ftp_watts) }));
   const bfData = data.filter(r => r.body_fat_pct).map(r => ({ x: r.date, y: parseFloat(r.body_fat_pct) }));
 
-  drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165);
-  drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250);
-  drawChart('chartBF', 'chartBFEmpty', bfData, '#40a8e8', '%', 25.2, 17);
+  drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165, { showSpecial: false });
+  drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250, { showSpecial: false });
+  drawChart('chartBF', 'chartBFEmpty', bfData, '#40a8e8', '%', 25.2, 17, { showSpecial: false });
 
   // Load workout summary and chart
   await loadWorkoutSummary();
   await renderWorkoutChart();
 }
 
-function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal) {
+function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal, options = {}) {
+  const { showSpecial = true, fontSize = 11 } = options;
   const canvas = document.getElementById(canvasId);
   const emptyEl = document.getElementById(emptyId);
   if (!canvas) return;
@@ -3329,13 +3330,13 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   const canvasWidth = rect.width > 0 ? rect.width : canvas.offsetWidth || canvas.parentElement?.offsetWidth || 320;
+  const H = parseInt(canvas.getAttribute('height')) || 160;
   canvas.width = canvasWidth * dpr;
-  canvas.height = 160 * dpr;
+  canvas.height = H * dpr;
   ctx.scale(dpr, dpr);
 
   const W = canvas.width / dpr;
-  const H = 160;
-  const pad = { top: 20, right: 20, bottom: 36, left: 44 };
+  const pad = { top: 20, right: 32, bottom: 36, left: 44 };
   const chartW = W - pad.left - pad.right;
   const chartH = H - pad.top - pad.bottom;
 
@@ -3362,14 +3363,14 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
     // Y axis labels
     const val = maxVal - (i / 4) * valRange;
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.font = '10px DM Mono, monospace';
+    ctx.font = `${fontSize}px DM Mono, monospace`;
     ctx.textAlign = 'right';
     ctx.fillText(val.toFixed(unit==='%'?1:0), pad.left - 6, y + 4);
   }
 
-  // Goal line
+  // Goal line — dim red
   const goalY = toY(goalVal);
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeStyle = 'rgba(200,50,50,0.3)';
   ctx.setLineDash([4, 4]);
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -3377,8 +3378,8 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
   ctx.lineTo(pad.left + chartW, goalY);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = '10px DM Mono, monospace';
+  ctx.fillStyle = 'rgba(220,80,80,0.55)';
+  ctx.font = `${fontSize}px DM Mono, monospace`;
   ctx.textAlign = 'left';
   ctx.fillText('GOAL ' + goalVal + unit, pad.left + 4, goalY - 4);
 
@@ -3395,7 +3396,7 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
     ctx.stroke();
     // Value label
     ctx.fillStyle = color;
-    ctx.font = 'bold 13px DM Sans, sans-serif';
+    ctx.font = `bold ${fontSize + 2}px DM Sans, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(dataPoints[0].y + unit, x, y - 14);
   } else {
@@ -3447,12 +3448,14 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
       : dataPoints.length <= 40 ? 5
       : 8;
 
-    const labelledIndices = new Set([firstIdx, lastIdx, maxIdx, minIdx]);
+    const labelledIndices = new Set(
+      [firstIdx, lastIdx, ...(showSpecial ? [maxIdx, minIdx] : [])]
+    );
 
     dataPoints.forEach((d, i) => {
       const x = toX(i), y = toY(d.y);
       const isLabelled = labelledIndices.has(i) || i % labelEveryN === 0;
-      const isSpecial = i === maxIdx || i === minIdx;
+      const isSpecial = showSpecial && (i === maxIdx || i === minIdx);
 
       // Draw dot — larger for special points
       ctx.beginPath();
@@ -3467,8 +3470,8 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
       if (isLabelled) {
         ctx.fillStyle = isSpecial ? '#fff' : color;
         ctx.font = isSpecial
-          ? 'bold 11px DM Mono, monospace'
-          : '10px DM Mono, monospace';
+          ? `bold ${fontSize}px DM Mono, monospace`
+          : `${fontSize - 1}px DM Mono, monospace`;
         ctx.textAlign = 'center';
 
         // Offset label above or below based on position in chart
@@ -3480,7 +3483,7 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
 
   // X axis date labels
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = '10px DM Mono, monospace';
+  ctx.font = `${fontSize}px DM Mono, monospace`;
   ctx.textAlign = 'center';
   const labelEvery = Math.ceil(dataPoints.length / 5);
   dataPoints.forEach((d, i) => {
