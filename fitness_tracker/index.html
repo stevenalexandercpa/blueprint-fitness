@@ -1407,18 +1407,6 @@ async function withRetry(fn, retries=3, delayMs=1000) {
   return { data: null, error: lastErr };
 }
 
-// ── COMPLETIONS CACHE ──────────────────────────
-const cacheKey = uid => `bp_completions_${uid}`;
-
-function loadCachedCompletions(userId) {
-  try { const r = localStorage.getItem(cacheKey(userId)); return r ? JSON.parse(r) : null; }
-  catch { return null; }
-}
-
-function saveCompletionsCache(userId, completions) {
-  try { localStorage.setItem(cacheKey(userId), JSON.stringify(completions)); } catch {}
-}
-
 // ── ONLINE / OFFLINE ───────────────────────────
 function updateOnlineStatus() {
   const dot = document.getElementById('onlineDot');
@@ -1544,6 +1532,12 @@ async function handleSignout() {
   if (avatarEl) avatarEl.textContent = '?';
   const navUserEl = document.getElementById('navUser');
   if (navUserEl) navUserEl.textContent = '';
+  // Clear any legacy cache entries
+  try {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('bp_completions_')) localStorage.removeItem(key);
+    });
+  } catch {}
   try {
     await sb.auth.signOut();
   } catch(e) {
@@ -1659,7 +1653,6 @@ async function autoMarkMissed() {
     if (status === 'pending' && now > closeTime) {
       if (!userCompletions[dk]) userCompletions[dk] = {};
       userCompletions[dk][task.id] = 'missed';
-      saveCompletionsCache(currentUser.id, userCompletions);
       await saveCompletion(task.id, 'missed', dk);
     }
   }
@@ -2030,14 +2023,12 @@ async function completeTask(taskId, dateKey, ws) {
   // Optimistic: update state + render immediately
   if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
   userCompletions[dateKey][taskId] = statusToSave;
-  saveCompletionsCache(currentUser.id, userCompletions);
   renderDaily();
   showToast(msg, col);
   // Background save — revert if it fails
   const ok = await saveCompletion(taskId, statusToSave, dateKey);
   if (!ok) {
     prev === undefined ? delete userCompletions[dateKey][taskId] : (userCompletions[dateKey][taskId] = prev);
-    saveCompletionsCache(currentUser.id, userCompletions);
     renderDaily();
   }
 }
@@ -2046,7 +2037,6 @@ async function undoTask(taskId, dateKey) {
   const prev = userCompletions[dateKey]?.[taskId];
   // Optimistic: update state + render immediately
   if (userCompletions[dateKey]) delete userCompletions[dateKey][taskId];
-  saveCompletionsCache(currentUser.id, userCompletions);
   renderDaily();
   showToast('Unmarked ↩', 'orange');
   // Background delete — revert if it fails
@@ -2054,7 +2044,6 @@ async function undoTask(taskId, dateKey) {
   if (!ok && prev !== undefined) {
     if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
     userCompletions[dateKey][taskId] = prev;
-    saveCompletionsCache(currentUser.id, userCompletions);
     renderDaily();
   }
 }
@@ -2063,13 +2052,11 @@ async function skipTask(taskId, dateKey) {
   const prev = userCompletions[dateKey]?.[taskId];
   if (!userCompletions[dateKey]) userCompletions[dateKey] = {};
   userCompletions[dateKey][taskId] = 'skipped';
-  saveCompletionsCache(currentUser.id, userCompletions);
   renderDaily();
   showToast('Task skipped', 'orange');
   const ok = await saveCompletion(taskId, 'skipped', dateKey);
   if (!ok) {
     prev === undefined ? delete userCompletions[dateKey][taskId] : (userCompletions[dateKey][taskId] = prev);
-    saveCompletionsCache(currentUser.id, userCompletions);
     renderDaily();
   }
 }
@@ -3628,14 +3615,7 @@ async function initApp(user) {
   try {
     currentUser = user;
 
-    // Phase 1 — show app instantly from cache so user sees content immediately
-    const cached = loadCachedCompletions(user.id);
-    if (cached) userCompletions = cached;
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-
-    // Phase 2 — load profile + fresh completions in parallel (background)
+    // Load profile + completions in parallel from Supabase
     const [profileResult, completionsData] = await Promise.all([
       withRetry(() => sb.from('profiles').select('*').eq('id', user.id).single()),
       loadUserData(user.id)
@@ -3643,7 +3623,11 @@ async function initApp(user) {
 
     currentProfile = profileResult.data;
     userCompletions = completionsData;
-    saveCompletionsCache(user.id, userCompletions);
+
+    // Show app only after data is ready — no stale cache flash
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
 
     // If no profile exists yet, create one from email
     if (!currentProfile) {
