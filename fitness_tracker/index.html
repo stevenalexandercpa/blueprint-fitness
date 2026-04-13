@@ -1246,13 +1246,18 @@
       </div>
 
       <!-- Avg watts trend chart -->
-      <div style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
+      <div style="margin:0 6px 16px;background:var(--card);border:1px solid var(--border);padding:16px 10px 16px 10px;">
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">Average Power Trend</div>
-        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Avg watts per ride over time</div>
-        <canvas id="chartWatts" height="220"></canvas>
-        <div id="chartWattsEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
-          No ride data yet.<br>
-          <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ IMPORT YOUR PELOTON CSV ABOVE</span>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px;">4-week rolling avg · linear trend</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;">
+            <canvas id="chartWatts" height="240"></canvas>
+            <div id="chartWattsEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+              No ride data yet.<br>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ IMPORT YOUR PELOTON CSV ABOVE</span>
+            </div>
+          </div>
+          <div id="chartWattsStats" style="flex-shrink:0;width:68px;display:none;flex-direction:column;gap:8px;padding-top:4px;"></div>
         </div>
       </div>
     </div>
@@ -3304,9 +3309,32 @@ async function renderWorkoutChart() {
   const projIdx    = (n - 1) + (28 / avgDaysPerRide);
   const projWatts  = Math.round(slope * projIdx + intercept);
 
+  const maxWatts = Math.max(...chartData.map(d => d.y));
+  const minWatts = Math.min(...chartData.map(d => d.y));
+  const lastRollingAvg = rollingAvg[rollingAvg.length - 1].y;
+  const projDelta = projWatts - lastRollingAvg;
+  const projArrow = projDelta > 1 ? '↑' : projDelta < -1 ? '↓' : '→';
+  const projColor = projDelta > 1 ? 'var(--accent)' : projDelta < -1 ? 'rgba(255,0,0,0.75)' : 'var(--muted)';
+
+  const statsEl = document.getElementById('chartWattsStats');
+  if (statsEl) {
+    statsEl.style.display = 'flex';
+    const stat = (label, value, unit2, color, sub) => `
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:8px 6px;text-align:center;">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">${label}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;color:${color};">${value}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">${unit2}</div>
+        ${sub ? `<div style="font-family:'DM Mono',monospace;font-size:9px;color:${projColor};margin-top:2px;">${sub}</div>` : ''}
+      </div>`;
+    statsEl.innerHTML =
+      stat('4W PROJ', projWatts, 'WATTS', projColor, `${projArrow} ${projDelta > 0 ? '+' : ''}${projDelta}w`) +
+      stat('HIGH', maxWatts, 'WATTS', 'var(--accent)', '') +
+      stat('LOW',  minWatts, 'WATTS', 'var(--muted)', '');
+  }
+
   drawChart('chartWatts', 'chartWattsEmpty', chartData, '#2db584', 'W',
     chartData[0]?.y || 100, 220, {
-      fontSize: 13,
+      fontSize: 14,
       trendLine: rollingAvg,
       regressionSlope: slope,
       regressionIntercept: intercept,
@@ -3413,9 +3441,9 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
     ctx.fillText(val.toFixed(unit==='%'?1:0), pad.left - 6, y + 4);
   }
 
-  // Goal line — dim red (#C00404)
+  // Goal line — red (#FF0000)
   const goalY = toY(goalVal);
-  ctx.strokeStyle = 'rgba(192,4,4,0.3)';
+  ctx.strokeStyle = 'rgba(255,0,0,0.3)';
   ctx.setLineDash([4, 4]);
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -3423,7 +3451,7 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
   ctx.lineTo(pad.left + chartW, goalY);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = 'rgba(192,4,4,0.65)';
+  ctx.fillStyle = 'rgba(255,0,0,0.6)';
   ctx.font = `${fontSize}px DM Mono, monospace`;
   ctx.textAlign = 'left';
   ctx.fillText('GOAL ' + goalVal + unit, pad.left + 4, goalY - 4);
@@ -3559,26 +3587,7 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 3. Projection annotation — top-right corner
-      const projWatts = options.projectedWatts;
-      if (projWatts != null) {
-        const delta = projWatts - Math.round(trendLine[n-1].y);
-        const arrow = delta > 1 ? '↑' : delta < -1 ? '↓' : '→';
-        const sign  = delta > 1 ? '+' : '';
-        const labelX = pad.left + chartW - 2;
-        const labelY2 = pad.top + 2;
-
-        // Badge background
-        const badge = `4W PROJ  ${arrow}${sign}${delta}W  ~${projWatts}W`;
-        ctx.font = `bold ${fontSize - 1}px DM Mono, monospace`;
-        const tw = ctx.measureText(badge).width;
-        ctx.fillStyle = 'rgba(232,192,64,0.12)';
-        ctx.fillRect(labelX - tw - 8, labelY2 - 1, tw + 10, fontSize + 6);
-
-        ctx.fillStyle = 'rgba(232,192,64,0.9)';
-        ctx.textAlign = 'right';
-        ctx.fillText(badge, labelX, labelY2 + fontSize);
-      }
+      // (projection shown in sidebar — see chartWattsStats)
     }
   }
 
