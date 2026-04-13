@@ -1197,6 +1197,64 @@
           <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ LOG YOUR FIRST BODY COMPOSITION READING ABOVE</span>
         </div>
       </div>
+
+      <div class="section-label" style="margin-top:8px;">PELOTON WORKOUTS</div>
+
+      <!-- Import card -->
+      <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">// Import CSV</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+          Export your workout history from Peloton and upload it here.
+          Duplicate rides are automatically ignored.
+        </p>
+        <label for="peloCsvInput" style="
+          display:block;
+          padding:14px;
+          background:transparent;
+          border:2px dashed var(--border2);
+          color:var(--muted);
+          font-family:'DM Mono',monospace;
+          font-size:12px;
+          letter-spacing:1px;
+          text-align:center;
+          cursor:pointer;
+          transition:all 0.2s;
+        " id="peloCsvLabel">
+          📂 TAP TO SELECT PELOTON CSV
+        </label>
+        <input type="file" id="peloCsvInput" accept=".csv"
+          style="display:none" onchange="handlePelotonImport(event)">
+        <div id="peloImportStatus" style="
+          margin-top:12px;
+          font-family:'DM Mono',monospace;
+          font-size:12px;
+          color:var(--muted);
+          letter-spacing:1px;
+          min-height:20px;
+          text-align:center;
+        "></div>
+      </div>
+
+      <!-- Summary stats -->
+      <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;" id="workoutSummaryCard">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;">// Ride Summary</div>
+        <div id="workoutSummaryContent">
+          <div style="text-align:center;padding:24px 0;font-size:13px;color:var(--muted);">
+            No workouts imported yet.
+          </div>
+        </div>
+      </div>
+
+      <!-- Avg watts trend chart -->
+      <div style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">Average Power Trend</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Avg watts per ride over time</div>
+        <canvas id="chartWatts" height="160"></canvas>
+        <div id="chartWattsEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+          No ride data yet.<br>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ IMPORT YOUR PELOTON CSV ABOVE</span>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -2841,7 +2899,9 @@ function switchTab(tab) {
   else if(tab==='together') renderTogether();
   else if(tab==='metrics') {
     // Small delay ensures view is visible before canvas sizing
-    setTimeout(() => renderMetricsCharts(), 50);
+    setTimeout(async () => {
+      await renderMetricsCharts();
+    }, 50);
   }
 }
 
@@ -2864,6 +2924,304 @@ function setMetricPlaceholders(baseline) {
     ftpInput.placeholder = 'e.g. 200';
     bfInput.placeholder = 'e.g. 20.0';
   }
+}
+
+async function handlePelotonImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('peloImportStatus');
+  const labelEl = document.getElementById('peloCsvLabel');
+
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'Reading file...';
+  labelEl.textContent = '⏳ IMPORTING...';
+
+  try {
+    const text = await file.text();
+    const rows = text.trim().split('\n');
+    if (rows.length < 2) {
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'File appears empty or invalid.';
+      labelEl.textContent = '📂 TAP TO SELECT PELOTON CSV';
+      return;
+    }
+
+    // Parse header
+    const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+    const idx = {
+      timestamp: headers.findIndex(h => h.includes('Workout Timestamp')),
+      discipline: headers.findIndex(h => h.includes('Fitness Discipline')),
+      type: headers.findIndex(h => h.includes('Type')),
+      title: headers.findIndex(h => h.includes('Title')),
+      duration: headers.findIndex(h => h.includes('Length')),
+      output: headers.findIndex(h => h.includes('Total Output')),
+      watts: headers.findIndex(h => h.includes('Avg. Watts')),
+      resistance: headers.findIndex(h => h.includes('Avg. Resistance')),
+      cadence: headers.findIndex(h => h.includes('Avg. Cadence')),
+      speed: headers.findIndex(h => h.includes('Avg. Speed')),
+      distance: headers.findIndex(h => h.includes('Distance')),
+      calories: headers.findIndex(h => h.includes('Calories')),
+      heartrate: headers.findIndex(h => h.includes('Avg. Heartrate')),
+    };
+
+    // Parse each row
+    const workouts = [];
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i].split(',').map(c => c.trim().replace(/"/g, ''));
+      if (!cols[0] || cols[0].length < 5) continue;
+
+      // Parse timestamp — format: "2026-04-05 22:41 (-07)"
+      const tsRaw = cols[idx.timestamp] || '';
+      const tsClean = tsRaw.replace(/\s*\(.*\)/, '').trim();
+      const workoutDate = new Date(tsClean);
+      if (isNaN(workoutDate.getTime())) continue;
+
+      const parseNum = (i) => {
+        if (i < 0 || !cols[i] || cols[i] === '') return null;
+        const n = parseFloat(cols[i]);
+        return isNaN(n) ? null : n;
+      };
+
+      workouts.push({
+        user_id: currentUser.id,
+        workout_date: workoutDate.toISOString(),
+        discipline: cols[idx.discipline] || null,
+        workout_type: cols[idx.type] || null,
+        title: cols[idx.title] || null,
+        duration_mins: parseNum(idx.duration),
+        total_output: parseNum(idx.output),
+        avg_watts: parseNum(idx.watts),
+        avg_resistance: idx.resistance >= 0 ? cols[idx.resistance] : null,
+        avg_cadence: parseNum(idx.cadence),
+        avg_speed_kph: parseNum(idx.speed),
+        distance_km: parseNum(idx.distance),
+        calories: parseNum(idx.calories),
+        avg_heartrate: parseNum(idx.heartrate),
+      });
+    }
+
+    if (workouts.length === 0) {
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'No valid workouts found in file.';
+      labelEl.textContent = '📂 TAP TO SELECT PELOTON CSV';
+      return;
+    }
+
+    statusEl.textContent = `Parsed ${workouts.length} workouts — saving...`;
+
+    // Insert in batches of 50 to avoid request size limits
+    let inserted = 0;
+    let skipped = 0;
+    const batchSize = 50;
+
+    for (let i = 0; i < workouts.length; i += batchSize) {
+      const batch = workouts.slice(i, i + batchSize);
+      const { data, error } = await sb.from('workouts')
+        .upsert(batch, {
+          onConflict: 'user_id,workout_date,duration_mins,total_output',
+          ignoreDuplicates: true
+        });
+      if (!error) {
+        inserted += batch.length;
+      } else {
+        console.error('Batch insert error:', error);
+        skipped += batch.length;
+      }
+    }
+
+    statusEl.style.color = 'var(--accent)';
+    statusEl.textContent =
+      `✓ Import complete — ${inserted} workouts saved` +
+      (skipped > 0 ? `, ${skipped} skipped` : '') + '.';
+    labelEl.textContent = '✓ IMPORT COMPLETE — TAP TO IMPORT AGAIN';
+
+    // Refresh summary
+    await loadWorkoutSummary();
+    await renderWorkoutChart();
+
+  } catch (err) {
+    console.error('Import error:', err);
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'Import failed — check file format and try again.';
+    labelEl.textContent = '📂 TAP TO SELECT PELOTON CSV';
+  }
+
+  // Reset file input so same file can be re-selected
+  event.target.value = '';
+}
+
+async function loadWorkoutSummary() {
+  if (!currentUser) return;
+
+  const { data, error } = await sb.from('workouts')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('discipline', 'Cycling')
+    .order('workout_date', { ascending: false });
+
+  const el = document.getElementById('workoutSummaryContent');
+  if (!el) return;
+
+  if (error || !data || data.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--muted);">No workouts imported yet.</div>';
+    return;
+  }
+
+  // Calculate summary stats
+  const totalRides = data.length;
+  const totalMins = data.reduce((s, r) => s + (r.duration_mins || 0), 0);
+  const totalHours = (totalMins / 60).toFixed(1);
+  const totalKj = data.reduce((s, r) => s + (r.total_output || 0), 0);
+  const totalCals = data.reduce((s, r) => s + (r.calories || 0), 0);
+
+  const withWatts = data.filter(r => r.avg_watts > 0);
+  const avgWatts = withWatts.length > 0
+    ? Math.round(withWatts.reduce((s, r) => s + r.avg_watts, 0) / withWatts.length)
+    : null;
+
+  const withHR = data.filter(r => r.avg_heartrate > 0);
+  const avgHR = withHR.length > 0
+    ? Math.round(withHR.reduce((s, r) => s + r.avg_heartrate, 0) / withHR.length)
+    : null;
+
+  const withCadence = data.filter(r => r.avg_cadence > 0);
+  const avgCadence = withCadence.length > 0
+    ? Math.round(withCadence.reduce((s, r) => s + r.avg_cadence, 0) / withCadence.length)
+    : null;
+
+  // Best 20-min power (FTP estimate)
+  const longRides = data.filter(r => r.duration_mins >= 20 && r.avg_watts > 0);
+  const best20min = longRides.length > 0
+    ? Math.max(...longRides.map(r => r.avg_watts))
+    : null;
+  const ftpEstimate = best20min ? Math.round(best20min * 0.95) : null;
+
+  // Most recent ride
+  const latest = data[0];
+  const latestDate = new Date(latest.workout_date).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric'
+  });
+
+  // Type breakdown
+  const typeCount = {};
+  data.forEach(r => {
+    const t = r.workout_type || 'Other';
+    typeCount[t] = (typeCount[t] || 0) + 1;
+  });
+  const topTypes = Object.entries(typeCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+
+  el.innerHTML = `
+    <!-- Top stats grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--gold);line-height:1;">${totalRides}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;">RIDES</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--accent);line-height:1;">${totalHours}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;">HOURS</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--blue);line-height:1;">${totalKj}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;">KJ OUTPUT</div>
+      </div>
+    </div>
+
+    <!-- Power and HR stats -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;">
+      ${avgWatts ? `
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">AVG POWER</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--accent);line-height:1;">${avgWatts}<span style="font-size:16px;color:var(--muted)"> W</span></div>
+      </div>` : ''}
+      ${avgHR ? `
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">AVG HEART RATE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--red);line-height:1;">${avgHR}<span style="font-size:16px;color:var(--muted)"> BPM</span></div>
+      </div>` : ''}
+      ${avgCadence ? `
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">AVG CADENCE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--gold);line-height:1;">${avgCadence}<span style="font-size:16px;color:var(--muted)"> RPM</span></div>
+      </div>` : ''}
+      ${ftpEstimate ? `
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">FTP ESTIMATE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--accent);line-height:1;">${ftpEstimate}<span style="font-size:16px;color:var(--muted)"> W</span></div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;">95% OF BEST 20-MIN EFFORT</div>
+      </div>` : ''}
+    </div>
+
+    <!-- Latest ride -->
+    <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;margin-bottom:16px;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">LATEST RIDE</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:15px;font-weight:500;">${latest.title || latest.workout_type || 'Ride'}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;">${latestDate} · ${latest.duration_mins} min</div>
+        </div>
+        <div style="display:flex;gap:16px;">
+          ${latest.avg_watts ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent)">${latest.avg_watts}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">WATTS</div></div>` : ''}
+          ${latest.avg_heartrate ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red)">${Math.round(latest.avg_heartrate)}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">BPM</div></div>` : ''}
+          ${latest.calories ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)">${latest.calories}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">CAL</div></div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout type breakdown -->
+    <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;">WORKOUT TYPES</div>
+      ${topTypes.map(([type, count]) => {
+        const pct = Math.round((count / totalRides) * 100);
+        return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:13px;">${type}</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${count} rides · ${pct}%</span>
+            </div>
+            <div style="height:4px;background:var(--border2);">
+              <div style="height:100%;width:${pct}%;background:var(--accent);"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function renderWorkoutChart() {
+  if (!currentUser) return;
+
+  const { data } = await sb.from('workouts')
+    .select('workout_date, avg_watts')
+    .eq('user_id', currentUser.id)
+    .eq('discipline', 'Cycling')
+    .gt('avg_watts', 0)
+    .order('workout_date', { ascending: true });
+
+  const canvas = document.getElementById('chartWatts');
+  const emptyEl = document.getElementById('chartWattsEmpty');
+
+  if (!data || data.length === 0) {
+    if (canvas) canvas.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (canvas) canvas.style.display = 'block';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const chartData = data.map(r => ({
+    x: r.workout_date.slice(0, 10),
+    y: r.avg_watts
+  }));
+
+  drawChart('chartWatts', 'chartWattsEmpty', chartData, '#2db584', 'W',
+    chartData[0]?.y || 100, 220);
 }
 
 async function renderMetricsCharts() {
@@ -2900,6 +3258,10 @@ async function renderMetricsCharts() {
   drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165);
   drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250);
   drawChart('chartBF', 'chartBFEmpty', bfData, '#40a8e8', '%', 25.2, 17);
+
+  // Load workout summary and chart
+  await loadWorkoutSummary();
+  await renderWorkoutChart();
 }
 
 function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal) {
