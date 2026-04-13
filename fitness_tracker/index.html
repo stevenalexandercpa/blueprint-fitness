@@ -1249,7 +1249,7 @@
       <div style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
         <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">Average Power Trend</div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Avg watts per ride over time</div>
-        <canvas id="chartWatts" height="160"></canvas>
+        <canvas id="chartWatts" height="220"></canvas>
         <div id="chartWattsEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
           No ride data yet.<br>
           <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent);">↑ IMPORT YOUR PELOTON CSV ABOVE</span>
@@ -2801,7 +2801,7 @@ async function loadMetricsHistory() {
       .select('*')
       .eq('user_id', currentUser.id)
       .order('date', { ascending: false })
-      .limit(5)
+      .limit(3)
   );
 
   if (error) {
@@ -2820,7 +2820,7 @@ async function loadMetricsHistory() {
     return;
   }
 
-  el.innerHTML = data.slice(0, 5).map((row, index) => {
+  el.innerHTML = data.slice(0, 3).map((row, index) => {
     const isLatest = index === 0;
     const dateFormatted = new Date(row.date + 'T12:00:00').toLocaleDateString('en-US', {
       weekday: 'short',
@@ -2871,7 +2871,7 @@ async function loadMetricsHistory() {
         </div>
       </div>
     `;
-  }).join('') + (data.length === 5 ? `
+  }).join('') + (data.length === 3 ? `
     <div style="
       text-align:center;
       padding: 12px 0 0;
@@ -2879,7 +2879,7 @@ async function loadMetricsHistory() {
       font-size: 11px;
       color: var(--muted);
       letter-spacing: 1px;
-    ">SHOWING LAST 5 ENTRIES · ALL DATA TRACKED IN CHARTS ABOVE</div>
+    ">SHOWING LAST 3 ENTRIES · FULL HISTORY IN CHARTS ABOVE</div>
   ` : '');
 }
 
@@ -3098,12 +3098,6 @@ async function loadWorkoutSummary() {
     : null;
   const ftpEstimate = best20min ? Math.round(best20min * 0.95) : null;
 
-  // Most recent ride
-  const latest = data[0];
-  const latestDate = new Date(latest.workout_date).toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric'
-  });
-
   // Type breakdown
   const typeCount = {};
   data.forEach(r => {
@@ -3156,20 +3150,71 @@ async function loadWorkoutSummary() {
       </div>` : ''}
     </div>
 
-    <!-- Latest ride -->
+    <!-- Latest 3 rides -->
     <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;margin-bottom:16px;">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">LATEST RIDE</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div style="font-size:15px;font-weight:500;">${latest.title || latest.workout_type || 'Ride'}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;">${latestDate} · ${latest.duration_mins} min</div>
-        </div>
-        <div style="display:flex;gap:16px;">
-          ${latest.avg_watts ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent)">${latest.avg_watts}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">WATTS</div></div>` : ''}
-          ${latest.avg_heartrate ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red)">${Math.round(latest.avg_heartrate)}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">BPM</div></div>` : ''}
-          ${latest.calories ? `<div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)">${latest.calories}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">CAL</div></div>` : ''}
-        </div>
-      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;">RECENT RIDES</div>
+      ${data.slice(0, 3).map((ride, rideIndex) => {
+        const rideDate = new Date(ride.workout_date).toLocaleDateString('en-US', {
+          weekday: 'short', month: 'short', day: 'numeric'
+        });
+        return `
+          <div style="
+            padding: 12px 0;
+            ${rideIndex < 2 ? 'border-bottom:1px solid var(--border);' : ''}
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:8px;
+          ">
+            <div style="flex:1;min-width:0;">
+              <div style="
+                font-size:14px;
+                font-weight:500;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                ${rideIndex === 0 ? 'color:var(--text);' : 'color:var(--muted);'}
+              ">${ride.title || ride.workout_type || 'Ride'}</div>
+              <div style="
+                font-family:'DM Mono',monospace;
+                font-size:11px;
+                color:var(--muted);
+                margin-top:2px;
+                display:flex;
+                gap:8px;
+                align-items:center;
+              ">
+                ${rideDate}
+                ${rideIndex === 0 ? '<span style="font-size:10px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(45,181,132,0.3);padding:1px 6px;letter-spacing:1px;">LATEST</span>' : ''}
+                · ${ride.duration_mins} min
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;flex-shrink:0;">
+              ${ride.avg_watts ? `
+                <div style="text-align:center;">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;color:var(--accent)">${ride.avg_watts}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">W</div>
+                </div>` : ''}
+              ${ride.avg_heartrate ? `
+                <div style="text-align:center;">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;color:var(--red)">${Math.round(ride.avg_heartrate)}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">BPM</div>
+                </div>` : ''}
+              ${ride.calories ? `
+                <div style="text-align:center;">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;color:var(--gold)">${ride.calories}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">CAL</div>
+                </div>` : ''}
+              ${ride.total_output ? `
+                <div style="text-align:center;">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;color:var(--blue)">${ride.total_output}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">KJ</div>
+                </div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
 
     <!-- Workout type breakdown -->
@@ -3226,6 +3271,8 @@ async function renderWorkoutChart() {
 
 async function renderMetricsCharts() {
   if (!currentUser) return;
+
+  await loadMetricsHistory();
 
   const { data, error } = await sb.from('metrics')
     .select('*')
@@ -3387,20 +3434,47 @@ function drawChart(canvasId, emptyId, dataPoints, color, unit, startVal, goalVal
     ctx.stroke();
 
     // Dots and values on each point
+    const maxVal2 = Math.max(...dataPoints.map(d => d.y));
+    const minVal2 = Math.min(...dataPoints.map(d => d.y));
+    const maxIdx = dataPoints.findIndex(d => d.y === maxVal2);
+    const minIdx = dataPoints.findIndex(d => d.y === minVal2);
+    const firstIdx = 0;
+    const lastIdx = dataPoints.length - 1;
+
+    // For dense charts show label every N points based on total count
+    const labelEveryN = dataPoints.length <= 10 ? 1
+      : dataPoints.length <= 20 ? 3
+      : dataPoints.length <= 40 ? 5
+      : 8;
+
+    const labelledIndices = new Set([firstIdx, lastIdx, maxIdx, minIdx]);
+
     dataPoints.forEach((d, i) => {
       const x = toX(i), y = toY(d.y);
+      const isLabelled = labelledIndices.has(i) || i % labelEveryN === 0;
+      const isSpecial = i === maxIdx || i === minIdx;
+
+      // Draw dot — larger for special points
       ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = color;
+      ctx.arc(x, y, isSpecial ? 5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = isSpecial ? '#fff' : color;
       ctx.fill();
-      ctx.strokeStyle = '#060d10';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = isSpecial ? color : '#060d10';
+      ctx.lineWidth = isSpecial ? 2 : 1.5;
       ctx.stroke();
-      // Value label
-      ctx.fillStyle = color;
-      ctx.font = '11px DM Mono, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(d.y + unit, x, y - 10);
+
+      // Draw label only for labelled points
+      if (isLabelled) {
+        ctx.fillStyle = isSpecial ? '#fff' : color;
+        ctx.font = isSpecial
+          ? 'bold 11px DM Mono, monospace'
+          : '10px DM Mono, monospace';
+        ctx.textAlign = 'center';
+
+        // Offset label above or below based on position in chart
+        const labelY = y < pad.top + 20 ? y + 18 : y - 8;
+        ctx.fillText(d.y + unit, x, labelY);
+      }
     });
   }
 
