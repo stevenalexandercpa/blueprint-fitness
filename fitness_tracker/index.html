@@ -2923,11 +2923,18 @@ async function logMetrics() {
   if (error) { showToast('Error saving metrics','red'); return; }
 
   showToast('✓ Metrics logged!');
-  document.getElementById('metricWeight').value='';
-  document.getElementById('metricFTP').value='';
-  document.getElementById('metricBF').value='';
-  document.getElementById('metricNotes').value='';
-  await loadMetricsHistory();
+
+  // Clear input values
+  document.getElementById('metricWeight').value = '';
+  document.getElementById('metricFTP').value = '';
+  document.getElementById('metricBF').value = '';
+  document.getElementById('metricNotes').value = '';
+
+  // Refresh everything in parallel — charts, history, and placeholders
+  await Promise.all([
+    loadMetricsHistory(),
+    renderMetricsCharts()
+  ]);
 }
 
 async function loadMetricsHistory() {
@@ -3209,9 +3216,9 @@ function setMetricPlaceholders(baseline) {
   if (!weightInput || !ftpInput || !bfInput) return;
 
   if (baseline) {
-    weightInput.placeholder = baseline.weight_lbs ? baseline.weight_lbs + ' lbs (first entry)' : 'e.g. 180';
-    ftpInput.placeholder = baseline.ftp_watts ? baseline.ftp_watts + 'W (first entry)' : 'e.g. 200';
-    bfInput.placeholder = baseline.body_fat_pct ? baseline.body_fat_pct + '% (first entry)' : 'e.g. 20.0';
+    weightInput.placeholder = baseline.weight_lbs ? baseline.weight_lbs + ' lbs (last entry)' : 'e.g. 180';
+    ftpInput.placeholder = baseline.ftp_watts ? baseline.ftp_watts + 'W (last entry)' : 'e.g. 200';
+    bfInput.placeholder = baseline.body_fat_pct ? baseline.body_fat_pct + '% (last entry)' : 'e.g. 20.0';
   } else {
     weightInput.placeholder = 'e.g. 180';
     ftpInput.placeholder = 'e.g. 200';
@@ -3669,8 +3676,14 @@ async function renderMetricsCharts() {
     return;
   }
 
-  // Load first entry to use as placeholder baseline
-  const baseline = data[0];
+  // Load latest entry to use as placeholder baseline
+  const { data: latestEntry } = await sb.from('metrics')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('date', { ascending: false })
+    .limit(1);
+
+  const baseline = latestEntry && latestEntry.length > 0 ? latestEntry[0] : null;
   setMetricPlaceholders(baseline);
 
   const weightData = data.filter(r => r.weight_lbs).map(r => ({ x: r.date, y: parseFloat(r.weight_lbs) }));
