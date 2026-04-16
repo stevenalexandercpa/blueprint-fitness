@@ -866,6 +866,61 @@
   }
 
   ::-webkit-scrollbar { width: 0; }
+
+  .exercise-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .exercise-card:hover, .exercise-card:active {
+    border-color: var(--accent);
+  }
+
+  .exercise-gif-thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: var(--bg2);
+    flex-shrink: 0;
+    border: 1px solid var(--border2);
+  }
+
+  .exercise-gif-placeholder {
+    width: 64px;
+    height: 64px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .exercise-category-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .filter-btn-active {
+    background: var(--accent) !important;
+    color: var(--bg) !important;
+    border-color: var(--accent) !important;
+  }
 </style>
 </head>
 <body>
@@ -1262,6 +1317,79 @@
       </div>
     </div>
 
+    <!-- EXERCISES -->
+    <div class="view" id="view-exercises">
+
+      <div class="section-label" style="padding-top:20px;">EXERCISE LIBRARY</div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:8px;padding:0 16px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <button onclick="filterExercises('all')" id="filter-all" style="
+          padding:6px 14px;background:var(--accent);color:var(--bg);
+          border:none;font-family:'DM Mono',monospace;font-size:11px;
+          letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+        ">ALL</button>
+        <button onclick="filterExercises('Pull')" id="filter-Pull" style="
+          padding:6px 14px;background:transparent;color:var(--muted);
+          border:1px solid var(--border2);font-family:'DM Mono',monospace;
+          font-size:11px;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+        ">PULL</button>
+        <button onclick="filterExercises('Push')" id="filter-Push" style="
+          padding:6px 14px;background:transparent;color:var(--muted);
+          border:1px solid var(--border2);font-family:'DM Mono',monospace;
+          font-size:11px;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+        ">PUSH</button>
+        <button onclick="filterExercises('Legs')" id="filter-Legs" style="
+          padding:6px 14px;background:transparent;color:var(--muted);
+          border:1px solid var(--border2);font-family:'DM Mono',monospace;
+          font-size:11px;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+        ">LEGS</button>
+        <button onclick="filterExercises('Core')" id="filter-Core" style="
+          padding:6px 14px;background:transparent;color:var(--muted);
+          border:1px solid var(--border2);font-family:'DM Mono',monospace;
+          font-size:11px;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+        ">CORE</button>
+      </div>
+
+      <!-- Exercise list -->
+      <div id="exerciseList" style="padding:0 16px 16px;">
+        <div style="text-align:center;padding:40px 0;color:var(--muted);
+          font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;">
+          LOADING EXERCISES...
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Exercise detail modal -->
+    <div class="modal-overlay" id="exerciseModal"
+      style="display:none;" onclick="closeExerciseModal()">
+      <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="exerciseModalName">Exercise</div>
+            <div class="modal-subtitle" id="exerciseModalMeta"></div>
+          </div>
+          <button class="modal-close" onclick="closeExerciseModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="exerciseModalGif" style="
+            text-align:center;margin-bottom:20px;
+            background:var(--bg2);border:1px solid var(--border);
+            padding:16px;min-height:200px;
+            display:flex;align-items:center;justify-content:center;
+          "></div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;
+            letter-spacing:1px;color:var(--muted);text-transform:uppercase;
+            margin-bottom:12px;">Instructions</div>
+          <div id="exerciseModalInstructions" style="
+            font-size:14px;color:var(--text);line-height:1.9;
+            white-space:pre-line;
+          "></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="tabbar">
@@ -1280,6 +1408,9 @@
     <button class="tab" onclick="switchTab('metrics')" id="tab-metrics">
       <span class="tab-icon">⟋</span><span>Metrics</span>
     </button>
+    <button class="tab" onclick="switchTab('exercises')" id="tab-exercises">
+      <span class="tab-icon">⊕</span><span>Exercises</span>
+    </button>
   </div>
 
 </div>
@@ -1297,6 +1428,7 @@ const sb = createClient(
 let currentUser = null;
 let currentProfile = null;
 let userCompletions = {}; // { dateKey: { taskId: status } }
+let recipesCache = {}; // { slug: instructions }
 let otherUserCompletions = {}; // partner's completions
 let currentTab = 'daily';
 let clockInterval = null;
@@ -1616,6 +1748,16 @@ async function loadOtherUserData() {
     });
   }
   return { completions, name: partner.name };
+}
+
+async function loadRecipes() {
+  if (Object.keys(recipesCache).length > 0) return; // already loaded
+  const { data, error } = await withRetry(() =>
+    sb.from('recipes').select('slug, instructions')
+  );
+  if (data) {
+    data.forEach(r => { recipesCache[r.slug] = r.instructions; });
+  }
 }
 
 async function saveCompletion(taskId, status, dateKey) {
@@ -2079,12 +2221,13 @@ function renderMeals(containerId, dayOffset) {
     card.className='meal-card';
     const cardId='meal-'+containerId+'-'+key;
     let recipeHtml='';
-    if(m.recipe && RECIPES[m.recipe]) {
+    const recipeInstructions = recipesCache[m.recipe] || RECIPES[m.recipe];
+    if(m.recipe && recipeInstructions) {
       recipeHtml=`
         <button class="meal-card-recipe-btn" onclick="toggleRecipe('${cardId}-recipe')">
           <span>📋 VIEW RECIPE</span><span id="${cardId}-recipe-arrow">▾</span>
         </button>
-        <div class="meal-card-recipe-body" id="${cardId}-recipe">${RECIPES[m.recipe]}</div>
+        <div class="meal-card-recipe-body" id="${cardId}-recipe">${recipeInstructions}</div>
       `;
     }
     card.innerHTML=`
@@ -2876,6 +3019,161 @@ async function loadMetricsHistory() {
 }
 
 // ══════════════════════════════════════════════
+// EXERCISES
+// ══════════════════════════════════════════════
+let exercisesCache = [];
+let exercisesFilter = 'all';
+
+async function loadExercises() {
+  if (exercisesCache.length > 0) {
+    renderExerciseList();
+    return;
+  }
+
+  const { data, error } = await withRetry(() =>
+    sb.from('exercises')
+      .select('*')
+      .order('category')
+      .order('name')
+  );
+
+  if (error || !data) {
+    document.getElementById('exerciseList').innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--muted);
+        font-size:13px;line-height:1.8;">
+        Could not load exercises.<br>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;">
+          Check connection and try again.
+        </span>
+      </div>
+    `;
+    return;
+  }
+
+  exercisesCache = data;
+  renderExerciseList();
+}
+
+function filterExercises(category) {
+  exercisesFilter = category;
+
+  // Update filter button styles
+  document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+    btn.classList.remove('filter-btn-active');
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border2)';
+  });
+
+  const activeBtn = document.getElementById('filter-' + category);
+  if (activeBtn) {
+    activeBtn.style.background = 'var(--accent)';
+    activeBtn.style.color = 'var(--bg)';
+    activeBtn.style.borderColor = 'var(--accent)';
+  }
+
+  renderExerciseList();
+}
+
+function renderExerciseList() {
+  const el = document.getElementById('exerciseList');
+  if (!el) return;
+
+  const filtered = exercisesFilter === 'all'
+    ? exercisesCache
+    : exercisesCache.filter(e => e.category === exercisesFilter);
+
+  if (filtered.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 0;
+      color:var(--muted);font-size:13px;">No exercises found.</div>`;
+    return;
+  }
+
+  const categoryColors = {
+    Pull: 'var(--blue)',
+    Push: 'var(--accent)',
+    Legs: 'var(--gold)',
+    Core: 'var(--orange)'
+  };
+
+  const difficultyColors = {
+    beginner: 'var(--accent)',
+    intermediate: 'var(--gold)',
+    advanced: 'var(--red)'
+  };
+
+  el.innerHTML = filtered.map(ex => {
+    const catColor = categoryColors[ex.category] || 'var(--muted)';
+    const diffColor = difficultyColors[ex.difficulty] || 'var(--muted)';
+    const thumbHtml = ex.gif_url
+      ? `<img class="exercise-gif-thumb" src="${ex.gif_url}"
+           alt="${ex.name}" loading="lazy"
+           onerror="this.parentElement.innerHTML='<div class=exercise-gif-placeholder>💪</div>'">`
+      : `<div class="exercise-gif-placeholder">💪</div>`;
+
+    return `
+      <div class="exercise-card" onclick="openExerciseModal('${ex.id}')">
+        ${thumbHtml}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:500;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            margin-bottom:4px;">${ex.name}</div>
+          <div style="font-size:12px;color:var(--muted);
+            margin-bottom:6px;white-space:nowrap;overflow:hidden;
+            text-overflow:ellipsis;">${ex.muscle_group}</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span class="exercise-category-badge"
+              style="color:${catColor};
+              background:${catColor.replace(')', '-dim)').replace('var(', 'var(--')};
+              border:1px solid ${catColor};">
+              ${ex.category}
+            </span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;
+              letter-spacing:1px;color:${diffColor};">
+              ${ex.difficulty.toUpperCase()}
+            </span>
+          </div>
+        </div>
+        <div style="color:var(--muted);font-size:18px;flex-shrink:0;">›</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openExerciseModal(exerciseId) {
+  const ex = exercisesCache.find(e => e.id === exerciseId);
+  if (!ex) return;
+
+  document.getElementById('exerciseModalName').textContent = ex.name;
+  document.getElementById('exerciseModalMeta').textContent =
+    `${ex.category} · ${ex.muscle_group} · ${ex.equipment} · ${ex.difficulty}`;
+
+  const gifEl = document.getElementById('exerciseModalGif');
+  if (ex.gif_url) {
+    gifEl.innerHTML = `
+      <img src="${ex.gif_url}" alt="${ex.name}"
+        style="max-width:100%;max-height:280px;object-fit:contain;"
+        onerror="this.parentElement.innerHTML='<div style=font-size:48px;color:var(--muted)>💪</div>'">
+    `;
+  } else {
+    gifEl.innerHTML = `<div style="font-size:48px;color:var(--muted);">💪</div>`;
+  }
+
+  document.getElementById('exerciseModalInstructions').textContent =
+    ex.instructions;
+
+  const modal = document.getElementById('exerciseModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExerciseModal() {
+  const modal = document.getElementById('exerciseModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════
 function switchTab(tab) {
@@ -2894,6 +3192,9 @@ function switchTab(tab) {
     setTimeout(async () => {
       await renderMetricsCharts();
     }, 50);
+  }
+  else if(tab==='exercises') {
+    setTimeout(() => loadExercises(), 50);
   }
 }
 
@@ -3618,7 +3919,8 @@ async function initApp(user) {
     // Load profile + completions in parallel from Supabase
     const [profileResult, completionsData] = await Promise.all([
       withRetry(() => sb.from('profiles').select('*').eq('id', user.id).single()),
-      loadUserData(user.id)
+      loadUserData(user.id),
+      loadRecipes()
     ]);
 
     currentProfile = profileResult.data;
