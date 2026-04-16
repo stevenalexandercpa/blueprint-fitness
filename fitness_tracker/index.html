@@ -1224,7 +1224,10 @@
       <div class="section-label">PROGRESS TRACKING</div>
 
       <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px;">Weight</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">Weight</div>
+          <div id="deltaWeight" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;"></div>
+        </div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Goal: 165 lbs</div>
         <canvas id="chartWeight" height="160"></canvas>
         <div id="chartWeightEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
@@ -1234,7 +1237,10 @@
       </div>
 
       <div style="margin:0 16px 8px;background:var(--card);border:1px solid var(--border);padding:20px;">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;">FTP — Functional Threshold Power</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;">FTP — Functional Threshold Power</div>
+          <div id="deltaFTP" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;flex-shrink:0;margin-left:8px;"></div>
+        </div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Goal: 220–250W</div>
         <canvas id="chartFTP" height="160"></canvas>
         <div id="chartFTPEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
@@ -1244,7 +1250,10 @@
       </div>
 
       <div style="margin:0 16px 16px;background:var(--card);border:1px solid var(--border);padding:20px;">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:4px;">Body Fat %</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Body Fat %</div>
+          <div id="deltaBF" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;"></div>
+        </div>
         <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">Current: 25.2% · Goal: ~17%</div>
         <canvas id="chartBF" height="160"></canvas>
         <div id="chartBFEmpty" style="display:none;text-align:center;padding:40px 0;font-size:13px;color:var(--muted);line-height:1.8;">
@@ -3651,6 +3660,20 @@ async function renderWorkoutChart() {
     });
 }
 
+function setDelta(elId, dataPoints, unit, lowerIsBetter) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (dataPoints.length < 2) { el.textContent = ''; return; }
+  const first = dataPoints[0].y;
+  const last  = dataPoints[dataPoints.length - 1].y;
+  const diff  = last - first;
+  if (diff === 0) { el.textContent = '—'; el.style.color = 'var(--muted)'; return; }
+  const isGood = lowerIsBetter ? diff < 0 : diff > 0;
+  const sign   = diff > 0 ? '+' : '';
+  el.textContent = sign + diff.toFixed(1) + unit;
+  el.style.color = isGood ? 'var(--accent)' : 'var(--red)';
+}
+
 async function renderMetricsCharts() {
   if (!currentUser) return;
 
@@ -3689,6 +3712,11 @@ async function renderMetricsCharts() {
   const weightData = data.filter(r => r.weight_lbs).map(r => ({ x: r.date, y: parseFloat(r.weight_lbs) }));
   const ftpData = data.filter(r => r.ftp_watts).map(r => ({ x: r.date, y: parseInt(r.ftp_watts) }));
   const bfData = data.filter(r => r.body_fat_pct).map(r => ({ x: r.date, y: parseFloat(r.body_fat_pct) }));
+
+  // Show first→latest delta beside each chart heading
+  setDelta('deltaWeight', weightData, ' lbs', true);
+  setDelta('deltaFTP',    ftpData,    'W',    false);
+  setDelta('deltaBF',     bfData,     '%',    true);
 
   drawChart('chartWeight', 'chartWeightEmpty', weightData, '#e8c040', 'lbs', 185, 165, { showSpecial: false });
   drawChart('chartFTP', 'chartFTPEmpty', ftpData, '#2db584', 'W', 189, 250, { showSpecial: false });
